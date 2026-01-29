@@ -2237,6 +2237,17 @@ const DashboardView = ({ initiatives, metrics }) => {
     count: initiatives.filter((item) => item.focusArea === focusArea).length
   }));
 
+  const metricLinks = {
+    Volunteers: 'https://northstarhouse.github.io/Volunteer-Database/',
+    'Donation total': 'https://northstarhouse.github.io/donation-database/',
+    Sponsors: 'https://northstarhouse.github.io/donation-database/'
+  };
+  const metricGoals = {
+    'Donation total': 'Goal: $75,000',
+    'Events booked': 'Goal: 45',
+    Sponsors: 'Goal: 15'
+  };
+
   return (
     <div className="max-w-6xl mx-auto fade-up">
       <div className="grid grid-cols-1 lg:grid-cols-[1.2fr_0.8fr] gap-6">
@@ -2259,10 +2270,32 @@ const DashboardView = ({ initiatives, metrics }) => {
             { label: 'Donation total', value: formatCurrency(metrics?.donationsTotal) },
             { label: 'Sponsors', value: formatCount(metrics?.sponsorsCount) }
           ].map((item) => (
-            <div key={item.label} className="bg-white rounded-2xl p-5 border border-stone-100 card-shadow">
-              <div className="text-xs uppercase tracking-wide text-steel">{item.label}</div>
-              <div className="font-display text-3xl text-ink mt-3">{item.value}</div>
-            </div>
+            metricLinks[item.label] ? (
+              <a
+                key={item.label}
+                href={metricLinks[item.label]}
+                className="bg-white rounded-2xl p-5 border border-stone-100 card-shadow block transition hover:-translate-y-0.5 hover:shadow-lg focus:outline-none focus-visible:ring-2 focus-visible:ring-gold/60 relative"
+                aria-label={`${item.label} details`}
+              >
+                <div className="text-xs uppercase tracking-wide text-steel">{item.label}</div>
+                <div className="font-display text-3xl text-ink mt-3">{item.value}</div>
+                {metricGoals[item.label] ? (
+                  <div className="absolute bottom-4 right-5 text-[10px] uppercase tracking-wide text-steel">
+                    {metricGoals[item.label]}
+                  </div>
+                ) : null}
+              </a>
+            ) : (
+              <div key={item.label} className="bg-white rounded-2xl p-5 border border-stone-100 card-shadow relative">
+                <div className="text-xs uppercase tracking-wide text-steel">{item.label}</div>
+                <div className="font-display text-3xl text-ink mt-3">{item.value}</div>
+                {metricGoals[item.label] ? (
+                  <div className="absolute bottom-4 right-5 text-[10px] uppercase tracking-wide text-steel">
+                    {metricGoals[item.label]}
+                  </div>
+                ) : null}
+              </div>
+            )
           ))}
         </div>
       </div>
