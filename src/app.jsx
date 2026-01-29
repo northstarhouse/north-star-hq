@@ -2912,22 +2912,15 @@ const StrategyApp = () => {
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-gold text-white flex items-center justify-center shadow-sm">
-                <IconStar size={18} />
+              <div className="w-10 h-10 rounded-full border border-gold/40 bg-white text-gold flex items-center justify-center shadow-sm">
+                <IconSpark size={18} />
               </div>
               <div>
                 <div className="font-display text-lg text-ink">Haley's Ops & Orbit</div>
                 <div className="text-xs text-steel">Progress tracker</div>
               </div>
             </div>
-            <div className="flex items-center gap-2 text-sm flex-wrap">
-              <button
-                onClick={() => { setView('quarterly'); setSelectedId(null); setFocusAreaFilter(null); }}
-                className={`px-4 py-2.5 min-w-[160px] rounded-lg border ${view === 'quarterly' ? 'bg-stone-100 border-stone-300' : 'border-stone-200'}`}
-              >
-                Quarterly Form
-              </button>
-            </div>
+            <div className="flex items-center gap-2 text-sm flex-wrap" />
           </div>
           <div className="pb-4">
             <div className="flex flex-wrap gap-3">
@@ -2936,12 +2929,6 @@ const StrategyApp = () => {
                 className={`tab-button text-sm min-w-[200px] ${view === 'dashboard' ? 'active' : ''}`}
               >
                 2026 Snapshot
-              </button>
-              <button
-                onClick={() => { setView('focus'); setSelectedId(null); setFocusAreaFilter(null); }}
-                className={`tab-button text-sm min-w-[200px] ${view === 'focus' ? 'active' : ''}`}
-              >
-                Strategic Plan Focus Areas
               </button>
               <select
                 value={SECTION_PAGES.some((item) => item.key === view) ? view : ''}
@@ -2966,7 +2953,7 @@ const StrategyApp = () => {
       <main className="px-4 sm:px-6 lg:px-8 py-8">
         {isLoading ? (
           <div className="max-w-4xl mx-auto bg-white rounded-2xl border border-stone-100 p-8 text-center text-stone-600">
-            Loading strategic plan data...
+            Loading Haley’s Organized Chaos...
           </div>
         ) : (
           <>
@@ -2976,46 +2963,12 @@ const StrategyApp = () => {
                 metrics={metrics}
               />
             )}
-            {view === 'focus' && (
-              <FocusAreasView
-                goals={focusAreaGoals}
-                visionStatements={visionStatements}
-                onSaveVision={handleSaveVision}
-                isSavingVision={isSavingVision}
-                onSaveGoal={handleSaveFocusGoal}
-                onDeleteGoal={handleDeleteFocusGoal}
-                isSaving={isSavingGoal}
-                focusFilter={focusAreaFilter}
-              />
-            )}
-            {view === 'quarterly' && (
-              <QuarterlyUpdateForm
-                onSubmitted={handleQuarterlySubmitted}
-                initialData={quarterlyDraft}
-                hidePrimaryGoals
-              />
-            )}
             {['construction', 'grounds', 'interiors', 'docents', 'fund', 'events', 'marketing', 'venue'].includes(view) && (
               <div className="max-w-4xl mx-auto fade-up">
                 <div className="bg-white rounded-3xl border border-stone-100 p-6 md:p-8 card-shadow">
                   <div className="flex items-start justify-between gap-3">
                     <h2 className="font-display text-3xl text-ink">{sectionDetails[view].label}</h2>
-                    <div className="flex items-center gap-2">
-                      <button
-                        type="button"
-                        onClick={() => handleStartQuarterlyForm(sectionDetails[view].label)}
-                        className="px-3 py-2 border border-stone-200 rounded-lg text-sm"
-                      >
-                        Quarterly form
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => handleFocusAreaJump(sectionDetails[view].label)}
-                        className="px-3 py-2 border border-stone-200 rounded-lg text-sm"
-                      >
-                        {`Focus area: ${sectionToFocusArea[sectionDetails[view].label] || sectionDetails[view].label}`}
-                      </button>
-                    </div>
+                    <div className="flex items-center gap-2" />
                   </div>
                   <p className="text-stone-600 mt-2">Beginning 2026 snapshot.</p>
                   <div className="mt-6 grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -3401,9 +3354,6 @@ const StrategyApp = () => {
         )}
       </main>
 
-      <footer className="mt-12 pb-10 text-center text-xs text-steel">
-        Built for shared accountability and board-level clarity.
-      </footer>
     </div>
   );
 };
