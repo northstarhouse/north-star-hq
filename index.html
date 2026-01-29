@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>North Star Strategic Plan</title>
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
+  <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cardo:wght@400;700&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            ink: '#1b1f24',
+            ocean: '#886c44',
+            clay: '#d07b59',
+            gold: '#886c44',
+            sand: '#f5efe6',
+            moss: '#56684a',
+            steel: '#7a8a93'
+          },
+          fontFamily: {
+            display: ['Cardo', 'Georgia', 'serif'],
+            body: ['Manrope', 'Tahoma', 'sans-serif']
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+    html {
+      font-size: clamp(14px, 1vw + 10px, 16px);
+    }
+    body {
+      margin: 0;
+      padding: 0;
+      -webkit-text-size-adjust: 100%;
+      -webkit-font-smoothing: antialiased;
+      overflow-x: hidden;
+      font-family: 'Manrope', Tahoma, sans-serif;
+      color: #1b1f24;
+      background: radial-gradient(circle at top, rgba(136, 108, 68, 0.08), transparent 45%),
+        linear-gradient(135deg, #f5efe6 0%, #f2e9dc 60%, #f8f3ea 100%);
+    }
+    #root {
+      width: 100%;
+      min-height: 100vh;
+    }
+
+    .font-display {
+      font-family: 'Cardo', Georgia, serif;
+    }
+
+    .card-shadow {
+      box-shadow: 0 18px 40px rgba(136, 108, 68, 0.08);
+    }
+
+    .quarter-card {
+      border: 2px solid rgba(136, 108, 68, 0.6);
+      box-shadow: 0 16px 32px rgba(136, 108, 68, 0.12);
+      border-radius: 18px;
+    }
+
+    .glass {
+      background: rgba(255, 255, 255, 0.78);
+      backdrop-filter: blur(12px);
+      border: 1px solid rgba(136, 108, 68, 0.08);
+    }
+
+    .fade-up {
+      animation: fadeUp 0.6s ease both;
+    }
+
+    .tab-button {
+      border-radius: 9999px 9999px 16px 16px;
+      border: 1px solid rgba(136, 108, 68, 0.12);
+      background: rgba(255, 255, 255, 0.9);
+      padding: 0.6rem 1rem;
+      box-shadow: 0 10px 20px rgba(136, 108, 68, 0.08);
+      transition: transform 0.15s ease, box-shadow 0.15s ease;
+    }
+
+    .tab-button:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 16px 30px rgba(136, 108, 68, 0.12);
+    }
+
+    .tab-button.active {
+      background: #886c44;
+      color: white;
+      border-color: #886c44;
+    }
+
+    .tab-select {
+      text-align: center;
+      text-align-last: center;
+      padding-right: 2.5rem;
+      appearance: none;
+      -webkit-appearance: none;
+      -moz-appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='%23564225'%3E%3Cpath d='M5 6.5L10 12l5-5.5' stroke='%23564225' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 0.85rem center;
+      background-size: 0.95rem;
+    }
+
+    @keyframes fadeUp {
+      from {
+        opacity: 0;
+        transform: translateY(16px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    button, a {
+      -webkit-tap-highlight-color: transparent;
+      touch-action: manipulation;
+    }
+
+    ::-webkit-scrollbar {
+      width: 8px;
+      height: 8px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #efe7db;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #c9b9a6;
+      border-radius: 4px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #a48e75;
+    }
+
+    @media (max-width: 640px) {
+      html { font-size: 14px; }
+    }
+    @media (max-width: 360px) {
+      html { font-size: 13px; }
+    }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+  <script src="assets/app.js?v=62" defer></script>
+</body>
+</html>

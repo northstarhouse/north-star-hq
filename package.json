@@ -1,0 +1,21 @@
+{
+  "name": "north-star-strategic-plan",
+  "version": "1.0.0",
+  "description": "Strategic plan tracker for North Star House board and leadership updates",
+  "main": "index.js",
+  "scripts": {
+    "build": "esbuild src/app.jsx --outfile=assets/app.js --minify --format=iife --jsx-factory=React.createElement --jsx-fragment=React.Fragment --target=es2017",
+    "watch": "esbuild src/app.jsx --outfile=assets/app.js --format=iife --jsx-factory=React.createElement --jsx-fragment=React.Fragment --target=es2017 --watch"
+  },
+  "keywords": [
+    "strategic-plan",
+    "board",
+    "leadership",
+    "north-star-house"
+  ],
+  "author": "North Star House",
+  "license": "ISC",
+  "devDependencies": {
+    "esbuild": "^0.27.2"
+  }
+}
