@@ -10,6 +10,7 @@ const SNAPSHOTS_CACHE_KEY = 'nsh-strategy-sections-cache-v1';
 const QUARTERLY_CACHE_KEY = 'nsh-strategy-quarterly-cache-v1';
 const VISION_CACHE_KEY = 'nsh-strategy-vision-cache-v1';
 const FOCUS_GOALS_CACHE_KEY = 'nsh-strategy-focus-goals-cache-v1';
+const MAJOR_TODOS_CACHE_KEY = 'nsh-strategy-major-todos-v1';
 const CACHE_TTL_MS = 5 * 60 * 1000;
 
 const readCache = () => {
@@ -628,6 +629,20 @@ const IconRefresh = ({ size = 20 }) => (
     <path d="M21 12a9 9 0 0 1-15.3 6.3"></path>
     <path d="M18 6v4h-4"></path>
     <path d="M6 18v-4h4"></path>
+  </svg>
+);
+
+const IconCheck = ({ size = 20 }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M20 6L9 17l-5-5"></path>
+  </svg>
+);
+
+const IconTrash = ({ size = 16 }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M3 6h18"></path>
+    <path d="M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2"></path>
+    <path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"></path>
   </svg>
 );
 
@@ -2227,15 +2242,22 @@ const FocusAreasView = ({ goals, visionStatements, onSaveVision, isSavingVision,
   );
 };
 
-const DashboardView = ({ initiatives, metrics }) => {
-  const progressAvg = initiatives.length
-    ? Math.round(initiatives.reduce((sum, item) => sum + (Number(item.progress) || 0), 0) / initiatives.length)
-    : 0;
+const DashboardView = ({ initiatives, metrics, majorTodos, onAddTodo, onToggleTodo, onDeleteTodo }) => {
+  const [newTodoText, setNewTodoText] = useState('');
 
-  const byFocusArea = FOCUS_AREAS.map((focusArea) => ({
-    focusArea,
-    count: initiatives.filter((item) => item.focusArea === focusArea).length
-  }));
+  const handleAddTodo = () => {
+    const text = newTodoText.trim();
+    if (!text) return;
+    onAddTodo(text);
+    setNewTodoText('');
+  };
+
+  const handleKeyDown = (e) => {
+    if (e.key === 'Enter') handleAddTodo();
+  };
+
+  const pendingTodos = majorTodos.filter((t) => !t.done);
+  const completedTodos = majorTodos.filter((t) => t.done);
 
   const metricLinks = {
     Volunteers: 'https://northstarhouse.github.io/Volunteer-Database/',
@@ -2253,15 +2275,77 @@ const DashboardView = ({ initiatives, metrics }) => {
       <div className="grid grid-cols-1 lg:grid-cols-[1.2fr_0.8fr] gap-6">
         <div className="glass rounded-3xl p-6 md:p-8 card-shadow">
           <div className="flex items-center gap-3 text-gold">
-            <IconSpark size={28} />
-            <span className="text-xs uppercase tracking-wide">Mission and vision</span>
+            <IconTarget size={28} />
+            <span className="text-xs uppercase tracking-wide">The Big Picture</span>
           </div>
-          <h1 className="font-display text-xl md:text-2xl text-ink mt-4">
-            Mission: To revitalize North Star House as a cultural gathering place that connects people of all ages through the arts, theater, literature, history, and music—fostering creativity, learning, and community for generations to come.
-          </h1>
-          <p className="text-stone-600 mt-2 text-xs md:text-sm">
-            Vision: [Add your vision statement here]
-          </p>
+          <h2 className="font-display text-xl md:text-2xl text-ink mt-4">Major Focus To-Do List</h2>
+          <p className="text-stone-500 text-xs mt-1 mb-4">The items that matter most right now.</p>
+
+          <div className="flex gap-2 mb-4">
+            <input
+              type="text"
+              value={newTodoText}
+              onChange={(e) => setNewTodoText(e.target.value)}
+              onKeyDown={handleKeyDown}
+              placeholder="Add a major focus item..."
+              className="flex-1 rounded-xl border border-stone-200 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-gold/50 focus:border-gold placeholder:text-stone-400"
+            />
+            <button
+              onClick={handleAddTodo}
+              disabled={!newTodoText.trim()}
+              className="bg-gold text-white rounded-xl px-4 py-2.5 text-sm font-medium transition hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-1.5"
+            >
+              <IconPlus size={16} />
+              Add
+            </button>
+          </div>
+
+          <div className="space-y-2 max-h-[320px] overflow-y-auto pr-1">
+            {pendingTodos.length === 0 && completedTodos.length === 0 && (
+              <p className="text-stone-400 text-sm text-center py-4">No items yet. Add your first major focus above.</p>
+            )}
+            {pendingTodos.map((todo) => (
+              <div key={todo.id} className="flex items-center gap-3 group bg-white rounded-xl border border-stone-100 px-4 py-3 transition hover:border-gold/30">
+                <button
+                  onClick={() => onToggleTodo(todo.id)}
+                  className="w-5 h-5 rounded-md border-2 border-stone-300 flex-shrink-0 transition hover:border-gold flex items-center justify-center"
+                  aria-label="Mark complete"
+                />
+                <span className="text-sm text-ink flex-1">{todo.text}</span>
+                <button
+                  onClick={() => onDeleteTodo(todo.id)}
+                  className="opacity-0 group-hover:opacity-60 hover:!opacity-100 text-stone-400 hover:text-red-500 transition flex-shrink-0"
+                  aria-label="Delete item"
+                >
+                  <IconTrash size={14} />
+                </button>
+              </div>
+            ))}
+            {completedTodos.length > 0 && (
+              <div className="pt-2 border-t border-stone-100 mt-3">
+                <p className="text-[10px] uppercase tracking-wide text-stone-400 mb-2">Completed</p>
+                {completedTodos.map((todo) => (
+                  <div key={todo.id} className="flex items-center gap-3 group rounded-xl px-4 py-2.5 transition">
+                    <button
+                      onClick={() => onToggleTodo(todo.id)}
+                      className="w-5 h-5 rounded-md bg-gold/20 border-2 border-gold/40 flex-shrink-0 flex items-center justify-center text-gold"
+                      aria-label="Mark incomplete"
+                    >
+                      <IconCheck size={12} />
+                    </button>
+                    <span className="text-sm text-stone-400 line-through flex-1">{todo.text}</span>
+                    <button
+                      onClick={() => onDeleteTodo(todo.id)}
+                      className="opacity-0 group-hover:opacity-60 hover:!opacity-100 text-stone-400 hover:text-red-500 transition flex-shrink-0"
+                      aria-label="Delete item"
+                    >
+                      <IconTrash size={14} />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
         <div className="grid grid-cols-2 gap-4">
           {[
@@ -2539,6 +2623,9 @@ const StrategyApp = () => {
     Marketing: null,
     Venue: null
   });
+  const [majorTodos, setMajorTodos] = useState(() => {
+    return readSimpleCache(MAJOR_TODOS_CACHE_KEY) || [];
+  });
   const [quarterlyUpdates, setQuarterlyUpdates] = useState([]);
   const [quarterlyDraft, setQuarterlyDraft] = useState(null);
   const [inlineQuarterEdit, setInlineQuarterEdit] = useState(null);
@@ -2558,6 +2645,26 @@ const StrategyApp = () => {
     () => initiatives.find((item) => item.id === editingId) || null,
     [initiatives, editingId]
   );
+
+  const saveMajorTodos = (next) => {
+    setMajorTodos(next);
+    writeSimpleCache(MAJOR_TODOS_CACHE_KEY, next);
+  };
+
+  const handleAddTodo = (text) => {
+    const next = [...majorTodos, { id: makeId(), text, done: false, createdAt: new Date().toISOString() }];
+    saveMajorTodos(next);
+  };
+
+  const handleToggleTodo = (id) => {
+    const next = majorTodos.map((t) => (t.id === id ? { ...t, done: !t.done } : t));
+    saveMajorTodos(next);
+  };
+
+  const handleDeleteTodo = (id) => {
+    const next = majorTodos.filter((t) => t.id !== id);
+    saveMajorTodos(next);
+  };
 
   useEffect(() => {
     loadData();
@@ -2961,6 +3068,10 @@ const StrategyApp = () => {
               <DashboardView
                 initiatives={initiatives}
                 metrics={metrics}
+                majorTodos={majorTodos}
+                onAddTodo={handleAddTodo}
+                onToggleTodo={handleToggleTodo}
+                onDeleteTodo={handleDeleteTodo}
               />
             )}
             {['construction', 'grounds', 'interiors', 'docents', 'fund', 'events', 'marketing', 'venue'].includes(view) && (
