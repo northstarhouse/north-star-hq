@@ -2275,7 +2275,7 @@ const DashboardView = ({ initiatives, metrics, majorTodos, onAddTodo, onToggleTo
       <div className="grid grid-cols-1 lg:grid-cols-[1.2fr_0.8fr] gap-6">
         <div className="glass rounded-3xl p-6 md:p-8 card-shadow">
           <div className="flex items-center gap-3 text-gold">
-            <IconTarget size={28} />
+            <IconSpark size={28} />
             <span className="text-xs uppercase tracking-wide">The Big Picture</span>
           </div>
           <h2 className="font-display text-xl md:text-2xl text-ink mt-4">Major Focus To-Do List</h2>
