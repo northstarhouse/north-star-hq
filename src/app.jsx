@@ -2333,7 +2333,14 @@ const DashboardView = ({ initiatives, metrics, majorTodos, onAddTodo, onToggleTo
                     >
                       <IconCheck size={12} />
                     </button>
-                    <span className="text-sm text-stone-400 line-through flex-1">{todo.text}</span>
+                    <span className="text-sm text-stone-400 line-through flex-1">
+                      {todo.text}
+                      {todo.completedAt && (
+                        <span className="ml-2 text-[10px] text-stone-300 no-underline inline-block" style={{ textDecoration: 'none' }}>
+                          {formatDate(todo.completedAt)}
+                        </span>
+                      )}
+                    </span>
                     <button
                       onClick={() => onDeleteTodo(todo.id)}
                       className="opacity-0 group-hover:opacity-60 hover:!opacity-100 text-stone-400 hover:text-red-500 transition flex-shrink-0"
@@ -2657,7 +2664,7 @@ const StrategyApp = () => {
   };
 
   const handleToggleTodo = (id) => {
-    const next = majorTodos.map((t) => (t.id === id ? { ...t, done: !t.done } : t));
+    const next = majorTodos.map((t) => (t.id === id ? { ...t, done: !t.done, completedAt: !t.done ? new Date().toISOString() : null } : t));
     saveMajorTodos(next);
   };
 
