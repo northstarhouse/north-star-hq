@@ -431,6 +431,43 @@ const SheetsAPI = {
       console.error('Error fetching section snapshots:', error);
       return null;
     }
+  },
+
+  fetchMajorTodos: async () => {
+    if (!SheetsAPI.isConfigured()) return [];
+    try {
+      const response = await fetch(`${GOOGLE_SCRIPT_URL}?action=getMajorTodos`);
+      if (!response.ok) throw new Error('Failed to fetch major todos');
+      const data = await response.json();
+      return data.todos || [];
+    } catch (error) {
+      console.error('Error fetching major todos:', error);
+      return [];
+    }
+  },
+
+  saveMajorTodo: async (todo) => {
+    if (!SheetsAPI.isConfigured()) return todo;
+    try {
+      const data = await SheetsAPI.postJson(GOOGLE_SCRIPT_URL, { action: 'saveMajorTodo', todo });
+      if (!data.success) throw new Error(data.error || 'Save failed');
+      return data.result;
+    } catch (error) {
+      console.error('Error saving major todo:', error);
+      return todo;
+    }
+  },
+
+  deleteMajorTodo: async (id) => {
+    if (!SheetsAPI.isConfigured()) return { deleted: true };
+    try {
+      const data = await SheetsAPI.postJson(GOOGLE_SCRIPT_URL, { action: 'deleteMajorTodo', id });
+      if (!data.success) throw new Error(data.error || 'Delete failed');
+      return data.result;
+    } catch (error) {
+      console.error('Error deleting major todo:', error);
+      return { deleted: false };
+    }
   }
 };
 
@@ -2659,18 +2696,26 @@ const StrategyApp = () => {
   };
 
   const handleAddTodo = (text) => {
-    const next = [...majorTodos, { id: makeId(), text, done: false, createdAt: new Date().toISOString() }];
+    const todo = { id: makeId(), text, done: false, createdAt: new Date().toISOString(), completedAt: '' };
+    const next = [...majorTodos, todo];
     saveMajorTodos(next);
+    SheetsAPI.saveMajorTodo(todo);
   };
 
   const handleToggleTodo = (id) => {
-    const next = majorTodos.map((t) => (t.id === id ? { ...t, done: !t.done, completedAt: !t.done ? new Date().toISOString() : null } : t));
+    const next = majorTodos.map((t) => {
+      if (t.id !== id) return t;
+      const updated = { ...t, done: !t.done, completedAt: !t.done ? new Date().toISOString() : '' };
+      SheetsAPI.saveMajorTodo(updated);
+      return updated;
+    });
     saveMajorTodos(next);
   };
 
   const handleDeleteTodo = (id) => {
     const next = majorTodos.filter((t) => t.id !== id);
     saveMajorTodos(next);
+    SheetsAPI.deleteMajorTodo(id);
   };
 
   useEffect(() => {
@@ -2750,6 +2795,10 @@ const StrategyApp = () => {
     if (focusGoalsData.length) {
       setFocusAreaGoals(focusGoalsData);
       writeSimpleCache(FOCUS_GOALS_CACHE_KEY, focusGoalsData);
+    }
+    const todosData = await SheetsAPI.fetchMajorTodos();
+    if (todosData.length) {
+      saveMajorTodos(todosData);
     }
   };
 

@@ -60,6 +60,10 @@ const VISION_HEADERS = [
   'threeYearVision',
   'updatedAt'
 ];
+const MAJOR_TODOS_SHEET_ID = '1Ylg3LAhhs1tEoVU9qRzhAK19mxKMRNhQjp8-a8dFW1Q';
+const MAJOR_TODOS_SHEET_NAME = 'Major Todos';
+const MAJOR_TODOS_HEADERS = ['id', 'text', 'done', 'createdAt', 'completedAt'];
+
 const FOCUS_GOALS_SHEET_NAME = 'Focus Areas';
 const FOCUS_GOALS_HEADERS = [
   'id',
@@ -435,6 +439,72 @@ function deleteFocusAreaGoal(id) {
 }
 
 /**
+ * Major Todos — backed by an external spreadsheet
+ */
+function getMajorTodosSheet() {
+  const ss = SpreadsheetApp.openById(MAJOR_TODOS_SHEET_ID);
+  let sheet = ss.getSheetByName(MAJOR_TODOS_SHEET_NAME);
+  if (!sheet) {
+    sheet = ss.insertSheet(MAJOR_TODOS_SHEET_NAME);
+  }
+  const headerRange = sheet.getRange(1, 1, 1, MAJOR_TODOS_HEADERS.length);
+  const headerValues = headerRange.getValues()[0];
+  const needsHeaders = headerValues.every((v) => v === '');
+  if (needsHeaders) {
+    headerRange.setValues([MAJOR_TODOS_HEADERS]);
+    headerRange.setFontWeight('bold');
+    sheet.setFrozenRows(1);
+  }
+  return sheet;
+}
+
+function getMajorTodos() {
+  const sheet = getMajorTodosSheet();
+  const data = sheet.getDataRange().getValues();
+  if (data.length <= 1) return [];
+  const headers = data[0];
+  return data.slice(1)
+    .filter((row) => row[0])
+    .map((row) => {
+      const obj = {};
+      headers.forEach((h, i) => { obj[h] = row[i]; });
+      obj.done = obj.done === true || obj.done === 'true';
+      return obj;
+    });
+}
+
+function saveMajorTodo(todo) {
+  const sheet = getMajorTodosSheet();
+  const lastRow = sheet.getLastRow();
+  const ids = lastRow > 1
+    ? sheet.getRange(2, 1, lastRow - 1, 1).getValues().flat()
+    : [];
+  const id = todo.id || Utilities.getUuid();
+  const rowIndex = ids.indexOf(id);
+  const targetRow = rowIndex >= 0 ? rowIndex + 2 : lastRow + 1;
+  const values = [
+    id,
+    todo.text || '',
+    todo.done === true || todo.done === 'true' ? 'true' : 'false',
+    todo.createdAt || new Date().toISOString(),
+    todo.completedAt || ''
+  ];
+  sheet.getRange(targetRow, 1, 1, values.length).setValues([values]);
+  return { id: id };
+}
+
+function deleteMajorTodo(id) {
+  const sheet = getMajorTodosSheet();
+  const lastRow = sheet.getLastRow();
+  if (lastRow < 2) return { deleted: false };
+  const ids = sheet.getRange(2, 1, lastRow - 1, 1).getValues().flat();
+  const rowIndex = ids.indexOf(id);
+  if (rowIndex < 0) return { deleted: false };
+  sheet.deleteRow(rowIndex + 2);
+  return { deleted: true };
+}
+
+/**
  * Get or create the file upload folder in Drive
  */
 function getImageFolder() {
@@ -627,6 +697,12 @@ function doGet(e) {
       const goals = getFocusAreaGoals();
       return ContentService
         .createTextOutput(JSON.stringify({ success: true, goals: goals }))
+        .setMimeType(ContentService.MimeType.JSON);
+    }
+    if (action === 'getMajorTodos') {
+      const todos = getMajorTodos();
+      return ContentService
+        .createTextOutput(JSON.stringify({ success: true, todos: todos }))
         .setMimeType(ContentService.MimeType.JSON);
     }
     if (action === 'getQuarterlyUpdates') {
@@ -898,6 +974,12 @@ function doPost(e) {
         break;
       case 'deleteFocusAreaGoal':
         result = deleteFocusAreaGoal(data.id);
+        break;
+      case 'saveMajorTodo':
+        result = saveMajorTodo(data.todo);
+        break;
+      case 'deleteMajorTodo':
+        result = deleteMajorTodo(data.id);
         break;
       default:
         return ContentService
