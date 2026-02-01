@@ -36,6 +36,14 @@ const SPONSORS_SHEET_NAME = '2026 Sponsors';
 const VOLUNTEERS_SHEET_ID = '1R-rBXFEnqcWXJCAbvpJwXooe-G231tanGYN4GDBv9ZA';
 const VOLUNTEERS_SHEET_NAME = '2026 Volunteers';
 const EVENTS_SHEET_ID = '1kv2-3cMhzViMr1Fs-SGmiY3DJe05p3r7VIVk5LOj-_k';
+const BOOKINGS_SHEET_ID = '1kv2-3cMhzViMr1Fs-SGmiY3DJe05p3r7VIVk5LOj-_k';
+const BOOKINGS_SHEET_NAME = 'Sheet2';
+const BOOKINGS_HEADERS = [
+  'id', 'name', 'type', 'date', 'client1', 'client2',
+  'brickWordingReceived', 'wording', 'orderStatus',
+  'insuranceReceived', 'questionnaireReceived', 'photoPermission',
+  'photographerLink', 'posted', 'completed'
+];
 
 const SECTIONS_SHEET_ID = '1jUZzVT5hJ238EhnZt-9N7iLJ7qeJOKKPVczCu_nypPQ';
 const SECTION_TABS = [
@@ -627,6 +635,82 @@ function updateVisionStatement(entry) {
 }
 
 /**
+ * Bookings sheet helpers
+ */
+function getBookingsSheet() {
+  const ss = SpreadsheetApp.openById(BOOKINGS_SHEET_ID);
+  let sheet = ss.getSheetByName(BOOKINGS_SHEET_NAME);
+  if (!sheet) {
+    sheet = ss.insertSheet(BOOKINGS_SHEET_NAME);
+  }
+  const headerRange = sheet.getRange(1, 1, 1, BOOKINGS_HEADERS.length);
+  const headerValues = headerRange.getValues()[0];
+  const needsHeaders = headerValues.every((v) => v === '');
+  if (needsHeaders) {
+    headerRange.setValues([BOOKINGS_HEADERS]);
+    headerRange.setFontWeight('bold');
+    sheet.setFrozenRows(1);
+  }
+  return sheet;
+}
+
+function getBookings() {
+  const sheet = getBookingsSheet();
+  const data = sheet.getDataRange().getValues();
+  if (data.length <= 1) return [];
+  const headers = data[0];
+  const boolFields = ['brickWordingReceived', 'insuranceReceived', 'questionnaireReceived', 'photoPermission', 'posted', 'completed'];
+  return data.slice(1)
+    .filter((row) => row[0])
+    .map((row) => {
+      const obj = {};
+      headers.forEach((h, i) => { obj[h] = row[i]; });
+      boolFields.forEach((f) => {
+        obj[f] = obj[f] === true || obj[f] === 'true';
+      });
+      return obj;
+    });
+}
+
+function saveBooking(booking) {
+  const sheet = getBookingsSheet();
+  const lastRow = sheet.getLastRow();
+  const ids = lastRow > 1
+    ? sheet.getRange(2, 1, lastRow - 1, 1).getValues().flat().map(String)
+    : [];
+  const id = String(booking.id || Utilities.getUuid());
+  const rowIndex = ids.indexOf(id);
+  const targetRow = rowIndex >= 0 ? rowIndex + 2 : lastRow + 1;
+  const boolFields = ['brickWordingReceived', 'insuranceReceived', 'questionnaireReceived', 'photoPermission', 'posted', 'completed'];
+  const values = BOOKINGS_HEADERS.map((h) => {
+    if (h === 'id') return id;
+    if (boolFields.includes(h)) return (booking[h] === true || booking[h] === 'true') ? 'true' : 'false';
+    return booking[h] || '';
+  });
+  sheet.getRange(targetRow, 1, 1, values.length).setValues([values]);
+  return { id: id };
+}
+
+function saveAllBookings(bookings) {
+  const sheet = getBookingsSheet();
+  const boolFields = ['brickWordingReceived', 'insuranceReceived', 'questionnaireReceived', 'photoPermission', 'posted', 'completed'];
+  // Clear existing data rows
+  const lastRow = sheet.getLastRow();
+  if (lastRow > 1) {
+    sheet.getRange(2, 1, lastRow - 1, BOOKINGS_HEADERS.length).clearContent();
+  }
+  if (!bookings || bookings.length === 0) return { saved: true, count: 0 };
+  const rows = bookings.map((booking) =>
+    BOOKINGS_HEADERS.map((h) => {
+      if (boolFields.includes(h)) return (booking[h] === true || booking[h] === 'true') ? 'true' : 'false';
+      return booking[h] || '';
+    })
+  );
+  sheet.getRange(2, 1, rows.length, BOOKINGS_HEADERS.length).setValues(rows);
+  return { saved: true, count: rows.length };
+}
+
+/**
  * Handle GET requests - fetch all initiatives
  */
 function doGet(e) {
@@ -703,6 +787,12 @@ function doGet(e) {
       const todos = getMajorTodos();
       return ContentService
         .createTextOutput(JSON.stringify({ success: true, todos: todos }))
+        .setMimeType(ContentService.MimeType.JSON);
+    }
+    if (action === 'getBookings') {
+      const bookings = getBookings();
+      return ContentService
+        .createTextOutput(JSON.stringify({ success: true, bookings: bookings }))
         .setMimeType(ContentService.MimeType.JSON);
     }
     if (action === 'getQuarterlyUpdates') {
@@ -980,6 +1070,12 @@ function doPost(e) {
         break;
       case 'deleteMajorTodo':
         result = deleteMajorTodo(data.id);
+        break;
+      case 'saveBooking':
+        result = saveBooking(data.booking);
+        break;
+      case 'saveAllBookings':
+        result = saveAllBookings(data.bookings);
         break;
       default:
         return ContentService
