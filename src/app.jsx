@@ -4,45 +4,17 @@ const { useState, useEffect, useMemo } = React;
 // LOCAL CACHE CONFIG
 // =====================================================================
 
-const CACHE_KEY = 'nsh-strategy-cache-v1';
 const METRICS_CACHE_KEY = 'nsh-strategy-metrics-cache-v1';
 const SNAPSHOTS_CACHE_KEY = 'nsh-strategy-sections-cache-v1';
 const QUARTERLY_CACHE_KEY = 'nsh-strategy-quarterly-cache-v1';
-const VISION_CACHE_KEY = 'nsh-strategy-vision-cache-v1';
-const FOCUS_GOALS_CACHE_KEY = 'nsh-strategy-focus-goals-cache-v1';
 const MAJOR_TODOS_CACHE_KEY = 'nsh-strategy-major-todos-v1';
-const CACHE_TTL_MS = 5 * 60 * 1000;
-
-const readCache = () => {
-  try {
-    const raw = localStorage.getItem(CACHE_KEY);
-    if (!raw) return null;
-    const parsed = JSON.parse(raw);
-    if (!parsed || !Array.isArray(parsed.objects)) return null;
-    return parsed;
-  } catch (error) {
-    console.warn('Failed to read cache:', error);
-    return null;
-  }
-};
-
-const writeCache = (objects) => {
-  try {
-    localStorage.setItem(
-      CACHE_KEY,
-      JSON.stringify({ objects, updatedAt: Date.now() })
-    );
-  } catch (error) {
-    console.warn('Failed to write cache:', error);
-  }
-};
 
 // ============================================================================
 // GOOGLE SHEETS CONFIGURATION
 // ============================================================================
 
 const USE_SHEETS = true;
-const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwceVcGLuTCKp_GjlzYERa1OyhUcQQw6jnKhG2cmn4_AgSZjPEE8CWaO698S-lEtlk1/exec';
+const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbydaZEpixA_RWAQ42HPsrFe6gCrf5bDYhWbj7COlNwmq-tQOOJaBiivRQfahnGq3WIDeQ/exec';
 const DRIVE_SCRIPT_URL = GOOGLE_SCRIPT_URL;
 
 // ============================================================================
@@ -87,132 +59,6 @@ const PROGRESS_OPTIONS = Array.from({ length: 11 }, (_, idx) => idx * 10);
 // FALLBACK SAMPLE DATA
 // ============================================================================
 
-const SAMPLE_INITIATIVES = [
-  {
-    id: '1',
-    title: 'Launch community listening series',
-    focusArea: 'Programs and Events',
-    description: 'Host quarterly listening sessions to guide program priorities and gather feedback.',
-    owner: 'Community Outreach Lead',
-    coChampions: 'Program Director, Board Liaison',
-    status: 'On track',
-    progress: 60,
-    targetDate: '2026-03-31',
-    successMetrics: '4 sessions held, 120 participants, report delivered to board',
-    threeYearVision: 'We will have a clear set of documented programs and services that reinforce the House\'s role as a cultural historical gathering center and are well-organized, financially sustainable, and have clearly communicated teams of staff/volunteers that run each of the programs/services.',
-    annualGoals: 'Host 4 sessions, publish summary report, build annual outreach playbook.',
-    notes: 'Align session topics with strategic planning themes.',
-    lastUpdateAt: '2026-01-12T18:30:00.000Z',
-    updates: [
-      {
-        id: 'up-1',
-        date: '2026-01-12T18:30:00.000Z',
-        author: 'Community Outreach Lead',
-        summary: 'Secured first three locations',
-        details: 'Libraries and partner agencies confirmed for January and February sessions.',
-        blockers: 'Waiting on translation support budget confirmation.',
-        nextSteps: 'Finalize outreach materials and RSVP form.',
-        progress: 60,
-        links: 'https://example.com/agenda',
-        reviewStatus: 'Pending',
-        reviewNotes: ''
-      }
-    ],
-    createdAt: '2025-11-15T12:00:00.000Z',
-    updatedAt: '2026-01-12T18:30:00.000Z'
-  },
-  {
-    id: '2',
-    title: 'Build leadership succession pipeline',
-    focusArea: 'Organizational Development',
-    description: 'Create leadership development plan and identify emerging leaders for key roles.',
-    owner: 'Executive Director',
-    coChampions: 'Board Chair, HR Committee',
-    status: 'At risk',
-    progress: 35,
-    targetDate: '2026-09-30',
-    successMetrics: 'Pipeline matrix completed, two leaders in shadow roles',
-    threeYearVision: 'A smooth-running organization that ensures the success of the Conservancy.',
-    annualGoals: 'Finalize competencies, identify 2 shadow roles, launch mentoring cadence.',
-    notes: 'Need agreement on competencies and mentorship structure.',
-    lastUpdateAt: '2025-12-18T17:05:00.000Z',
-    updates: [
-      {
-        id: 'up-2',
-        date: '2025-12-18T17:05:00.000Z',
-        author: 'Executive Director',
-        summary: 'Drafted role competency framework',
-        details: 'Outlined core competencies for leadership roles; awaiting committee review.',
-        blockers: 'Committee schedule conflict in January.',
-        nextSteps: 'Hold workshop to finalize framework.',
-        progress: 35,
-        links: '',
-        reviewStatus: 'Needs info',
-        reviewNotes: 'Please add timeline impact for delayed workshop.'
-      }
-    ],
-    createdAt: '2025-10-01T09:00:00.000Z',
-    updatedAt: '2025-12-18T17:05:00.000Z'
-  },
-  {
-    id: '3',
-    title: 'Complete house restoration and grounds plan',
-    focusArea: 'House and Grounds Development',
-    description: 'Finish the first floor renovation, restore the second floor with a volunteer crew, install fire suppression, and clarify the grounds plan.',
-    owner: 'Facilities Lead',
-    coChampions: 'Volunteer Crew Lead, Board Liaison',
-    status: 'Not started',
-    progress: 0,
-    targetDate: '2028-12-31',
-    successMetrics: 'First floor renovated, second floor restored, fire suppression installed, grounds plan approved.',
-    threeYearVision: 'Complete the first floor renovation. The 2nd floor of the house will be restored by a clearly-led and well-organized volunteer crew. A fire suppression system will be installed. Plans for the rest of the grounds will have been clarified.',
-    annualGoals: 'Confirm scope, recruit volunteer crew, secure fire suppression bids, draft grounds plan options.',
-    notes: '',
-    lastUpdateAt: '2026-01-15T12:00:00.000Z',
-    updates: [],
-    createdAt: '2026-01-01T12:00:00.000Z',
-    updatedAt: '2026-01-15T12:00:00.000Z'
-  },
-  {
-    id: '4',
-    title: 'Staff and organize fund development plan',
-    focusArea: 'Fund Development',
-    description: 'Build staffing, systems, and campaign execution to accelerate fundraising.',
-    owner: 'Development Director',
-    coChampions: 'Board Treasurer, Capital Campaign Chair',
-    status: 'Not started',
-    progress: 0,
-    targetDate: '2028-12-31',
-    successMetrics: 'Fund development staffing in place, $1M raised toward capital campaign.',
-    threeYearVision: 'Over the next three years we will have successfully staffed and organized our fund development plans and raised $1M of the $2M capital campaign.',
-    annualGoals: 'Hire development lead, finalize campaign plan, raise initial $250k.',
-    notes: '',
-    lastUpdateAt: '2026-01-15T12:00:00.000Z',
-    updates: [],
-    createdAt: '2026-01-01T12:00:00.000Z',
-    updatedAt: '2026-01-15T12:00:00.000Z'
-  }
-];
-
-const SAMPLE_FOCUS_GOALS = [
-  {
-    id: 'fg-1',
-    focusArea: 'Fund Development',
-    goalTopic: 'Annual goal',
-    annualGoals: 'Document the Conservancy’s fund development plan.',
-    annualGoalsItems: [],
-    goalDetails: '',
-    goalLead: '',
-    futureGoals: '',
-    startDate: '',
-    dueDate: '',
-    goalChampions: 'Jeff, Haley',
-    goalTeamMembers: '',
-    progress: 'Not Started',
-    category: ''
-  }
-];
-
 // ============================================================================
 // GOOGLE SHEETS API FUNCTIONS
 // ============================================================================
@@ -228,72 +74,6 @@ const SheetsAPI = {
     });
     if (!response.ok) throw new Error('Request failed');
     return response.json();
-  },
-
-  fetchAll: async () => {
-    if (!USE_SHEETS) {
-      const cached = readCache();
-      return cached?.objects || [];
-    }
-    if (!SheetsAPI.isConfigured()) {
-      console.log('Google Sheets not configured, using sample data');
-      return SAMPLE_INITIATIVES;
-    }
-
-    try {
-      const response = await fetch(`${GOOGLE_SCRIPT_URL}?action=getAll`);
-      if (!response.ok) throw new Error('Failed to fetch data');
-      const data = await response.json();
-      return data.objects || [];
-    } catch (error) {
-      console.error('Error fetching from Google Sheets:', error);
-      return SAMPLE_INITIATIVES;
-    }
-  },
-
-  create: async (object) => {
-    if (!SheetsAPI.isConfigured()) {
-      console.log('Google Sheets not configured, saving locally only');
-      return { ...object, id: Date.now().toString() };
-    }
-
-    try {
-      const data = await SheetsAPI.postJson(GOOGLE_SCRIPT_URL, { action: 'create', object });
-      return data.result || { ...object, id: Date.now().toString() };
-    } catch (error) {
-      console.error('Error creating in Google Sheets:', error);
-      return { ...object, id: Date.now().toString() };
-    }
-  },
-
-  update: async (object) => {
-    if (!SheetsAPI.isConfigured()) {
-      console.log('Google Sheets not configured, saving locally only');
-      return object;
-    }
-
-    try {
-      await SheetsAPI.postJson(GOOGLE_SCRIPT_URL, { action: 'update', object });
-      return object;
-    } catch (error) {
-      console.error('Error updating from Google Sheets:', error);
-      return object;
-    }
-  },
-
-  delete: async (id) => {
-    if (!SheetsAPI.isConfigured()) {
-      console.log('Google Sheets not configured');
-      return true;
-    }
-
-    try {
-      await SheetsAPI.postJson(GOOGLE_SCRIPT_URL, { action: 'delete', id });
-      return true;
-    } catch (error) {
-      console.error('Error deleting from Google Sheets:', error);
-      return false;
-    }
   },
 
   uploadFile: async ({ filename, mimeType, data }) => {
@@ -343,63 +123,6 @@ const SheetsAPI = {
     }
     const data = await SheetsAPI.postJson(GOOGLE_SCRIPT_URL, { action: 'submitReviewUpdate', review });
     if (!data.success) throw new Error(data.error || 'Submission failed');
-    return data.result;
-  },
-
-  fetchVisionStatements: async () => {
-    if (!SheetsAPI.isConfigured()) {
-      return [];
-    }
-    try {
-      const response = await fetch(`${GOOGLE_SCRIPT_URL}?action=getVisionStatements`);
-      if (!response.ok) throw new Error('Failed to fetch vision statements');
-      const data = await response.json();
-      return data.vision || [];
-    } catch (error) {
-      console.error('Error fetching vision statements:', error);
-      return [];
-    }
-  },
-
-  updateVisionStatement: async (vision) => {
-    if (!SheetsAPI.isConfigured()) {
-      throw new Error('Google Sheets not configured');
-    }
-    const data = await SheetsAPI.postJson(GOOGLE_SCRIPT_URL, { action: 'updateVisionStatement', vision });
-    if (!data.success) throw new Error(data.error || 'Save failed');
-    return data.result;
-  },
-
-  fetchFocusAreaGoals: async () => {
-    if (!SheetsAPI.isConfigured()) {
-      return [];
-    }
-    try {
-      const response = await fetch(`${GOOGLE_SCRIPT_URL}?action=getFocusAreaGoals`);
-      if (!response.ok) throw new Error('Failed to fetch focus area goals');
-      const data = await response.json();
-      return data.goals || [];
-    } catch (error) {
-      console.error('Error fetching focus area goals:', error);
-      return [];
-    }
-  },
-
-  updateFocusAreaGoal: async (goal) => {
-    if (!SheetsAPI.isConfigured()) {
-      throw new Error('Google Sheets not configured');
-    }
-    const data = await SheetsAPI.postJson(GOOGLE_SCRIPT_URL, { action: 'updateFocusAreaGoal', goal });
-    if (!data.success) throw new Error(data.error || 'Save failed');
-    return data.result;
-  },
-
-  deleteFocusAreaGoal: async (id) => {
-    if (!SheetsAPI.isConfigured()) {
-      throw new Error('Google Sheets not configured');
-    }
-    const data = await SheetsAPI.postJson(GOOGLE_SCRIPT_URL, { action: 'deleteFocusAreaGoal', id });
-    if (!data.success) throw new Error(data.error || 'Delete failed');
     return data.result;
   },
 
@@ -2279,7 +2002,7 @@ const FocusAreasView = ({ goals, visionStatements, onSaveVision, isSavingVision,
   );
 };
 
-const DashboardView = ({ initiatives, metrics, majorTodos, onAddTodo, onToggleTodo, onDeleteTodo }) => {
+const DashboardView = ({ metrics, majorTodos, onAddTodo, onToggleTodo, onDeleteTodo }) => {
   const [newTodoText, setNewTodoText] = useState('');
 
   const handleAddTodo = () => {
@@ -2627,36 +2350,14 @@ const InitiativeDetailView = ({ initiative, onBack, onEdit, onSubmitUpdate, onRe
 // ============================================================================
 
 const StrategyApp = () => {
-  const [initiatives, setInitiatives] = useState([]);
   const [view, setView] = useState('dashboard');
-  const [selectedId, setSelectedId] = useState(null);
-  const [editingId, setEditingId] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [isSaving, setIsSaving] = useState(false);
-  const [isConnected, setIsConnected] = useState(false);
   const [metrics, setMetrics] = useState({
     donationsTotal: null,
     volunteersCount: null,
     eventsCount: null,
     sponsorsCount: null
   });
-  const [visionStatements, setVisionStatements] = useState([]);
-  const [isSavingVision, setIsSavingVision] = useState(false);
-  const [focusAreaGoals, setFocusAreaGoals] = useState([]);
-  const [isSavingGoal, setIsSavingGoal] = useState(false);
-  const [focusAreaFilter, setFocusAreaFilter] = useState(null);
-  const [focusPanelOpen, setFocusPanelOpen] = useState(false);
-  const [focusPanelArea, setFocusPanelArea] = useState(null);
-  const sectionToFocusArea = {
-    Construction: 'House and Grounds Development',
-    Grounds: 'House and Grounds Development',
-    Interiors: 'House and Grounds Development',
-    Fundraising: 'Fund Development',
-    Marketing: 'Organizational Development',
-    Venue: 'Fund Development',
-    Docents: 'Programs and Events',
-    Events: 'Programs and Events'
-  };
   const [sectionSnapshots, setSectionSnapshots] = useState({
     Construction: null,
     Grounds: null,
@@ -2679,16 +2380,6 @@ const StrategyApp = () => {
     acc[item.key] = { label: item.label, key: item.sheet };
     return acc;
   }, {});
-
-  const selectedInitiative = useMemo(
-    () => initiatives.find((item) => item.id === selectedId) || null,
-    [initiatives, selectedId]
-  );
-
-  const editingInitiative = useMemo(
-    () => initiatives.find((item) => item.id === editingId) || null,
-    [initiatives, editingId]
-  );
 
   const saveMajorTodos = (next) => {
     setMajorTodos(next);
@@ -2724,180 +2415,47 @@ const StrategyApp = () => {
 
   const loadData = async ({ useCache = true } = {}) => {
     if (!USE_SHEETS) {
-      const cached = readCache();
-      setInitiatives((cached?.objects || []).map(normalizeInitiative));
-      setIsConnected(false);
-      setFocusAreaGoals(SAMPLE_FOCUS_GOALS);
       setIsLoading(false);
       return;
     }
 
-    const cached = useCache ? readCache() : null;
-    const isCacheFresh = cached && (Date.now() - cached.updatedAt) < CACHE_TTL_MS;
+    setIsLoading(true);
     const cachedMetrics = useCache ? readSimpleCache(METRICS_CACHE_KEY) : null;
     const cachedSnapshots = useCache ? readSimpleCache(SNAPSHOTS_CACHE_KEY) : null;
     const cachedQuarterly = useCache ? readSimpleCache(QUARTERLY_CACHE_KEY) : null;
-    const cachedVision = useCache ? readSimpleCache(VISION_CACHE_KEY) : null;
-    const cachedFocusGoals = useCache ? readSimpleCache(FOCUS_GOALS_CACHE_KEY) : null;
-
-    if (cached?.objects?.length) {
-      setInitiatives(cached.objects.map(normalizeInitiative));
-      setIsConnected(SheetsAPI.isConfigured());
-      setIsLoading(false);
-    } else {
-      setIsLoading(true);
-    }
 
     if (cachedMetrics) setMetrics(cachedMetrics);
     if (cachedSnapshots) setSectionSnapshots(cachedSnapshots);
     if (cachedQuarterly) setQuarterlyUpdates(cachedQuarterly);
-    if (cachedVision) setVisionStatements(cachedVision);
-    if (cachedFocusGoals) setFocusAreaGoals(cachedFocusGoals);
 
     try {
-      if (isCacheFresh) {
-        // Still refresh in the background for latest changes.
+      const metricsData = await SheetsAPI.fetchMetrics();
+      if (metricsData) {
+        setMetrics(metricsData);
+        writeSimpleCache(METRICS_CACHE_KEY, metricsData);
       }
-      const data = await SheetsAPI.fetchAll();
-      const normalized = (data || []).map(normalizeInitiative);
-      setInitiatives(normalized);
-      setIsConnected(SheetsAPI.isConfigured());
-      writeCache(normalized);
+
+      const snapshotData = await SheetsAPI.fetchSectionSnapshots();
+      if (snapshotData) {
+        setSectionSnapshots(snapshotData);
+        writeSimpleCache(SNAPSHOTS_CACHE_KEY, snapshotData);
+      }
+
+      const updatesData = await SheetsAPI.fetchQuarterlyUpdates();
+      if (updatesData.length) {
+        setQuarterlyUpdates(updatesData);
+        writeSimpleCache(QUARTERLY_CACHE_KEY, updatesData);
+      }
+
+      const todosData = await SheetsAPI.fetchMajorTodos();
+      if (todosData.length) {
+        saveMajorTodos(todosData);
+      }
     } catch (error) {
       console.error('Failed to load data:', error);
-      if (!cached?.objects?.length) {
-        setInitiatives(SAMPLE_INITIATIVES.map(normalizeInitiative));
-      }
     }
 
     setIsLoading(false);
-    const metricsData = await SheetsAPI.fetchMetrics();
-    if (metricsData) {
-      setMetrics(metricsData);
-      writeSimpleCache(METRICS_CACHE_KEY, metricsData);
-    }
-    const snapshotData = await SheetsAPI.fetchSectionSnapshots();
-    if (snapshotData) {
-      setSectionSnapshots(snapshotData);
-      writeSimpleCache(SNAPSHOTS_CACHE_KEY, snapshotData);
-    }
-    const updatesData = await SheetsAPI.fetchQuarterlyUpdates();
-    if (updatesData.length) {
-      setQuarterlyUpdates(updatesData);
-      writeSimpleCache(QUARTERLY_CACHE_KEY, updatesData);
-    }
-    const visionData = await SheetsAPI.fetchVisionStatements();
-    if (visionData.length) {
-      setVisionStatements(visionData);
-      writeSimpleCache(VISION_CACHE_KEY, visionData);
-    }
-    const focusGoalsData = await SheetsAPI.fetchFocusAreaGoals();
-    if (focusGoalsData.length) {
-      setFocusAreaGoals(focusGoalsData);
-      writeSimpleCache(FOCUS_GOALS_CACHE_KEY, focusGoalsData);
-    }
-    const todosData = await SheetsAPI.fetchMajorTodos();
-    if (todosData.length) {
-      saveMajorTodos(todosData);
-    }
-  };
-
-  const handleSelect = (id) => {
-    setSelectedId(id);
-    setView('detail');
-    window.scrollTo(0, 0);
-  };
-
-  const handleAdd = () => {
-    setEditingId(null);
-    setView('add');
-    window.scrollTo(0, 0);
-  };
-
-  const handleEdit = (initiative) => {
-    setEditingId(initiative.id);
-    setView('edit');
-    window.scrollTo(0, 0);
-  };
-
-  const handleSaveInitiative = async (initiative) => {
-    setIsSaving(true);
-    try {
-      if (editingInitiative) {
-        const updated = await SheetsAPI.update({ ...initiative, updates: initiative.updates || [] });
-        setInitiatives((prev) => {
-          const next = prev.map((item) => (item.id === updated.id ? normalizeInitiative(updated) : item));
-          writeCache(next);
-          return next;
-        });
-        setSelectedId(updated.id);
-        setView('detail');
-      } else {
-        const created = await SheetsAPI.create({
-          ...initiative,
-          id: initiative.id || makeId(),
-          updates: initiative.updates || []
-        });
-        setInitiatives((prev) => {
-          const next = [...prev, normalizeInitiative(created)];
-          writeCache(next);
-          return next;
-        });
-        setSelectedId(created.id);
-        setView('detail');
-      }
-    } catch (error) {
-      console.error('Failed to save initiative:', error);
-      alert('Failed to save. Please try again.');
-    }
-    setIsSaving(false);
-  };
-
-  const handleSubmitUpdate = async (initiative, update) => {
-    const updates = [update, ...(initiative.updates || [])];
-    const next = {
-      ...initiative,
-      updates,
-      progress: update.progress,
-      lastUpdateAt: update.date
-    };
-    try {
-      await SheetsAPI.update(next);
-      setInitiatives((prev) => {
-        const updated = prev.map((item) => (item.id === initiative.id ? normalizeInitiative(next) : item));
-        writeCache(updated);
-        return updated;
-      });
-    } catch (error) {
-      console.error('Failed to submit update:', error);
-      alert('Failed to submit update. Please try again.');
-    }
-  };
-
-  const handleReviewUpdate = async (initiative, updateId, status, notes) => {
-    const updates = (initiative.updates || []).map((item) =>
-      item.id === updateId ? { ...item, reviewStatus: status, reviewNotes: notes } : item
-    );
-    const next = { ...initiative, updates };
-    try {
-      await SheetsAPI.update(next);
-      setInitiatives((prev) => {
-        const updated = prev.map((item) => (item.id === initiative.id ? normalizeInitiative(next) : item));
-        writeCache(updated);
-        return updated;
-      });
-    } catch (error) {
-      console.error('Failed to save review:', error);
-      alert('Failed to save review. Please try again.');
-    }
-  };
-
-  const handleStartQuarterlyForm = (areaLabel) => {
-    setQuarterlyDraft({ focusArea: areaLabel });
-    setView('quarterly');
-    setSelectedId(null);
-    setFocusAreaFilter(null);
-    window.scrollTo(0, 0);
   };
 
   const handleQuarterlyReviewSave = async (review) => {
@@ -3007,68 +2565,6 @@ const StrategyApp = () => {
     setView('dashboard');
   };
 
-  const handleFocusAreaJump = (areaLabel) => {
-    const focusArea = sectionToFocusArea[areaLabel] || areaLabel;
-    setFocusPanelArea(focusArea);
-    setFocusPanelOpen(true);
-  };
-
-  const handleSaveVision = async (focusArea, threeYearVision) => {
-    setIsSavingVision(true);
-    try {
-      const updated = await SheetsAPI.updateVisionStatement({ focusArea, threeYearVision });
-      setVisionStatements((prev) => {
-        const index = prev.findIndex((item) => item.focusArea === focusArea);
-        const next = index >= 0
-          ? prev.map((item, idx) => (idx === index ? updated : item))
-          : [...prev, updated];
-        writeSimpleCache(VISION_CACHE_KEY, next);
-        return next;
-      });
-    } catch (error) {
-      console.error('Failed to save vision statement:', error);
-      alert('Failed to save. Please try again.');
-    }
-    setIsSavingVision(false);
-  };
-
-  const handleSaveFocusGoal = async (goal) => {
-    setIsSavingGoal(true);
-    try {
-      const updated = await SheetsAPI.updateFocusAreaGoal(goal);
-      setFocusAreaGoals((prev) => {
-        const index = prev.findIndex((item) => item.id === updated.id);
-        const next = index >= 0
-          ? prev.map((item, idx) => (idx === index ? updated : item))
-          : [...prev, updated];
-        writeSimpleCache(FOCUS_GOALS_CACHE_KEY, next);
-        return next;
-      });
-    } catch (error) {
-      console.error('Failed to save focus goal:', error);
-      alert('Failed to save. Please try again.');
-    }
-    setIsSavingGoal(false);
-  };
-
-  const handleDeleteFocusGoal = async (id) => {
-    setIsSavingGoal(true);
-    try {
-      await SheetsAPI.deleteFocusAreaGoal(id);
-      setFocusAreaGoals((prev) => {
-        const next = prev.filter((item) => item.id !== id);
-        writeSimpleCache(FOCUS_GOALS_CACHE_KEY, next);
-        return next;
-      });
-    } catch (error) {
-      console.error('Failed to delete focus goal:', error);
-      alert('Failed to delete. Please try again.');
-    }
-    setIsSavingGoal(false);
-  };
-
-  const isDetailReady = view === 'detail' && selectedInitiative;
-
   return (
     <div className="min-h-screen">
       <header className="sticky top-0 z-40 bg-white/90 backdrop-blur border-b border-stone-100">
@@ -3088,7 +2584,7 @@ const StrategyApp = () => {
           <div className="pb-4">
             <div className="flex flex-wrap gap-3">
               <button
-                onClick={() => { setView('dashboard'); setSelectedId(null); setFocusAreaFilter(null); }}
+                onClick={() => setView('dashboard')}
                 className={`tab-button text-sm min-w-[200px] ${view === 'dashboard' ? 'active' : ''}`}
               >
                 2026 Snapshot
@@ -3099,7 +2595,6 @@ const StrategyApp = () => {
                   const nextView = event.target.value;
                   if (!nextView) return;
                   setView(nextView);
-                  setSelectedId(null);
                 }}
                 className="tab-button tab-select text-sm bg-white min-w-[220px]"
               >
@@ -3122,7 +2617,6 @@ const StrategyApp = () => {
           <>
             {view === 'dashboard' && (
               <DashboardView
-                initiatives={initiatives}
                 metrics={metrics}
                 majorTodos={majorTodos}
                 onAddTodo={handleAddTodo}
@@ -3162,30 +2656,6 @@ const StrategyApp = () => {
                     })()}
                   </div>
                 </div>
-                {focusPanelOpen && focusPanelArea === sectionToFocusArea[sectionDetails[view].label] && (
-                  <div className="mt-6 bg-white rounded-3xl border border-stone-100 p-6 card-shadow">
-                    <div className="flex items-center justify-between">
-                      <div className="font-display text-2xl text-ink">{focusPanelArea}</div>
-                      <button
-                        type="button"
-                        onClick={() => { setFocusPanelOpen(false); setFocusPanelArea(null); }}
-                        className="px-3 py-2 border border-stone-200 rounded-lg text-sm"
-                      >
-                        Close
-                      </button>
-                    </div>
-                    <div className="mt-4">
-                      <FocusAreaCard
-                        focusArea={focusPanelArea}
-                        goals={focusAreaGoals.filter((goal) => goal.focusArea === focusPanelArea)}
-                        onSaveGoal={handleSaveFocusGoal}
-                        onDeleteGoal={handleDeleteFocusGoal}
-                        isSaving={isSavingGoal}
-                        hideTitle
-                      />
-                    </div>
-                  </div>
-                )}
                 {(() => {
                   const areaLabel = sectionDetails[view].label;
                   const quarterPairs = [['Q1', 'Q2'], ['Q3', 'Q4']];
@@ -3492,31 +2962,6 @@ const StrategyApp = () => {
                 })()}
               </div>
             )}
-            {isDetailReady && (
-              <InitiativeDetailView
-                initiative={selectedInitiative}
-                onBack={() => setView('list')}
-                onEdit={() => handleEdit(selectedInitiative)}
-                onSubmitUpdate={handleSubmitUpdate}
-                onReviewUpdate={handleReviewUpdate}
-              />
-            )}
-            {(view === 'add' || view === 'edit') && (
-              <div className="max-w-4xl mx-auto fade-up">
-                <button
-                  onClick={() => setView(editingInitiative ? 'detail' : 'list')}
-                  className="flex items-center gap-2 text-sm text-gold mb-4"
-                >
-                  <IconBack size={18} /> Cancel
-                </button>
-                <InitiativeForm
-                  initiative={editingInitiative}
-                  onSave={handleSaveInitiative}
-                  onCancel={() => setView(editingInitiative ? 'detail' : 'list')}
-                  isSaving={isSaving}
-                />
-              </div>
-            )}
           </>
         )}
       </main>
@@ -3531,6 +2976,8 @@ const StrategyApp = () => {
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(<StrategyApp />);
+
+
 
 
 
