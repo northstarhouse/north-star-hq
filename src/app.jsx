@@ -2137,11 +2137,11 @@ const DashboardView = ({ metrics, majorTodos, onAddTodo, onToggleTodo, onDeleteT
         </div>
         <div className="grid grid-cols-2 gap-4">
           {[
-            { label: 'Voicemails', value: 'Voicemails' },
-            { label: 'Volunteers', value: formatCount(metrics?.volunteersCount) },
-            { label: 'Events booked', value: formatCount(metrics?.eventsCount) },
             { label: 'Donation total', value: formatCurrency(metrics?.donationsTotal) },
-            { label: 'Sponsors', value: formatCount(metrics?.sponsorsCount) }
+            { label: 'Events booked', value: formatCount(metrics?.eventsCount) },
+            { label: 'Sponsors', value: formatCount(metrics?.sponsorsCount) },
+            { label: 'Volunteers', value: formatCount(metrics?.volunteersCount) },
+            { label: 'Voicemails', value: 'Voicemails' }
           ].map((item) => (
             metricLinks[item.label] ? (
               <a
