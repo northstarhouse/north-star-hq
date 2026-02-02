@@ -2452,33 +2452,41 @@ const StrategyApp = () => {
     if (cachedQuarterly) setQuarterlyUpdates(cachedQuarterly);
 
     try {
-      const metricsData = await SheetsAPI.fetchMetrics();
-      if (metricsData) {
-        setMetrics(metricsData);
-        writeSimpleCache(METRICS_CACHE_KEY, metricsData);
-      }
+      const results = await Promise.allSettled([
+        SheetsAPI.fetchMetrics(),
+        SheetsAPI.fetchSectionSnapshots(),
+        SheetsAPI.fetchMajorTodos()
+      ]);
 
-      const snapshotData = await SheetsAPI.fetchSectionSnapshots();
-      if (snapshotData) {
-        setSectionSnapshots(snapshotData);
-        writeSimpleCache(SNAPSHOTS_CACHE_KEY, snapshotData);
+      const [metricsResult, snapshotResult, todosResult] = results;
+      if (metricsResult.status === 'fulfilled' && metricsResult.value) {
+        setMetrics(metricsResult.value);
+        writeSimpleCache(METRICS_CACHE_KEY, metricsResult.value);
       }
-
-      const updatesData = await SheetsAPI.fetchQuarterlyUpdates();
-      if (updatesData.length) {
-        setQuarterlyUpdates(updatesData);
-        writeSimpleCache(QUARTERLY_CACHE_KEY, updatesData);
+      if (snapshotResult.status === 'fulfilled' && snapshotResult.value) {
+        setSectionSnapshots(snapshotResult.value);
+        writeSimpleCache(SNAPSHOTS_CACHE_KEY, snapshotResult.value);
       }
-
-      const todosData = await SheetsAPI.fetchMajorTodos();
-      if (todosData.length) {
-        saveMajorTodos(todosData);
+      if (todosResult.status === 'fulfilled' && todosResult.value?.length) {
+        saveMajorTodos(todosResult.value);
       }
     } catch (error) {
       console.error('Failed to load data:', error);
     }
 
     setIsLoading(false);
+
+    setTimeout(async () => {
+      try {
+        const updatesData = await SheetsAPI.fetchQuarterlyUpdates();
+        if (updatesData.length) {
+          setQuarterlyUpdates(updatesData);
+          writeSimpleCache(QUARTERLY_CACHE_KEY, updatesData);
+        }
+      } catch (error) {
+        console.error('Failed to load quarterly updates:', error);
+      }
+    }, 0);
   };
 
   const handleQuarterlyReviewSave = async (review) => {
