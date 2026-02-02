@@ -17,6 +17,22 @@ const USE_SHEETS = true;
 const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbydaZEpixA_RWAQ42HPsrFe6gCrf5bDYhWbj7COlNwmq-tQOOJaBiivRQfahnGq3WIDeQ/exec';
 const DRIVE_SCRIPT_URL = GOOGLE_SCRIPT_URL;
 
+const isValidScriptUrl = (url) =>
+  /^https:\/\/script\.google\.com\/macros\/s\/[^/]+\/exec$/i.test(String(url || '').trim());
+
+const getScriptConfigWarning = () => {
+  if (!USE_SHEETS) return '';
+  if (!GOOGLE_SCRIPT_URL) return 'Google Sheets URL is missing.';
+  const raw = String(GOOGLE_SCRIPT_URL).trim();
+  if (raw.includes('/macros/library/')) {
+    return 'Google Sheets URL is a library link. Use the Web App /exec URL instead.';
+  }
+  if (!isValidScriptUrl(raw)) {
+    return 'Google Sheets URL must be the Web App /exec link.';
+  }
+  return '';
+};
+
 // ============================================================================
 // DROPDOWN OPTIONS
 // ============================================================================
@@ -64,7 +80,7 @@ const PROGRESS_OPTIONS = Array.from({ length: 11 }, (_, idx) => idx * 10);
 // ============================================================================
 
 const SheetsAPI = {
-  isConfigured: () => USE_SHEETS && GOOGLE_SCRIPT_URL && GOOGLE_SCRIPT_URL.length > 0,
+  isConfigured: () => USE_SHEETS && isValidScriptUrl(GOOGLE_SCRIPT_URL),
 
   postJson: async (url, payload) => {
     const response = await fetch(url, {
@@ -72,7 +88,10 @@ const SheetsAPI = {
       headers: { 'Content-Type': 'text/plain;charset=utf-8' },
       body: JSON.stringify(payload)
     });
-    if (!response.ok) throw new Error('Request failed');
+    if (!response.ok) {
+      const body = await response.text();
+      throw new Error(`Request failed (${response.status}). ${body || 'No response body.'}`);
+    }
     return response.json();
   },
 
@@ -2020,6 +2039,7 @@ const DashboardView = ({ metrics, majorTodos, onAddTodo, onToggleTodo, onDeleteT
   const completedTodos = majorTodos.filter((t) => t.done);
 
   const metricLinks = {
+    'Events booked': 'https://northstarhouse.github.io/north-star-bookings-log/',
     Volunteers: 'https://northstarhouse.github.io/Volunteer-Database/',
     'Donation total': 'https://northstarhouse.github.io/donation-database/',
     Sponsors: 'https://northstarhouse.github.io/donation-database/'
@@ -2352,6 +2372,7 @@ const InitiativeDetailView = ({ initiative, onBack, onEdit, onSubmitUpdate, onRe
 const StrategyApp = () => {
   const [view, setView] = useState('dashboard');
   const [isLoading, setIsLoading] = useState(true);
+  const scriptConfigWarning = getScriptConfigWarning();
   const [metrics, setMetrics] = useState({
     donationsTotal: null,
     volunteersCount: null,
@@ -2609,6 +2630,11 @@ const StrategyApp = () => {
       </header>
 
       <main className="px-4 sm:px-6 lg:px-8 py-8">
+        {scriptConfigWarning && (
+          <div className="max-w-4xl mx-auto mb-6 rounded-2xl border border-amber-200 bg-amber-50 px-5 py-4 text-sm text-amber-800">
+            {scriptConfigWarning}
+          </div>
+        )}
         {isLoading ? (
           <div className="max-w-4xl mx-auto bg-white rounded-2xl border border-stone-100 p-8 text-center text-stone-600">
             Loading Haley’s Organized Chaos...
