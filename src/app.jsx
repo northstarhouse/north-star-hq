@@ -2606,8 +2606,8 @@ const StrategyApp = () => {
                 <IconSpark size={18} />
               </div>
               <div>
-                <div className="font-display text-lg text-ink">Haley’s Star Command: Mission Control</div>
-                <div className="text-xs text-steel">Progress tracker</div>
+                <div className="font-display text-lg text-ink">Haley’s Star Command</div>
+                <div className="text-xs text-steel">Mission Control</div>
               </div>
             </div>
             <div className="flex items-center gap-2 text-sm flex-wrap" />
