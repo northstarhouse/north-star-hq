@@ -2052,7 +2052,7 @@ const HoneybookMessagesView = ({ onBack }) => (
       </div>
     </div>
 
-    <div className="grid grid-cols-1 lg:grid-cols-[1fr_320px] gap-6">
+    <div className="grid grid-cols-1 gap-6">
       <div className="glass rounded-3xl border border-stone-100 card-shadow overflow-hidden">
         <div className="flex items-center justify-between px-5 py-4 border-b border-stone-100 bg-white/80">
           <div>
@@ -2068,28 +2068,6 @@ const HoneybookMessagesView = ({ onBack }) => (
           src={HONEYBOOK_MESSAGES_EMBED_URL}
           className="w-full h-[70vh] md:h-[80vh] border-0 bg-white"
         />
-      </div>
-
-      <div className="glass rounded-3xl border border-stone-100 card-shadow p-5">
-        <div className="text-xs uppercase tracking-wide text-steel">Quick guide</div>
-        <h3 className="font-display text-xl text-ink mt-2">Stay on top of voicemails</h3>
-        <p className="text-sm text-stone-500 mt-2">
-          Use this view for a calmer read-through and quick navigation. Edits still happen in the sheet.
-        </p>
-        <div className="mt-5 space-y-3 text-sm text-stone-600">
-          <div className="flex items-start gap-2">
-            <span className="mt-1 h-2 w-2 rounded-full bg-gold" />
-            <p>Scan newest rows first before calling back.</p>
-          </div>
-          <div className="flex items-start gap-2">
-            <span className="mt-1 h-2 w-2 rounded-full bg-gold" />
-            <p>Mark status updates right after each response.</p>
-          </div>
-          <div className="flex items-start gap-2">
-            <span className="mt-1 h-2 w-2 rounded-full bg-gold" />
-            <p>Open the full sheet for sorting or filters.</p>
-          </div>
-        </div>
       </div>
     </div>
   </div>
