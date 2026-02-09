@@ -2671,7 +2671,7 @@ const StrategyApp = () => {
               </div>
               <div>
                 <div className="font-display text-lg text-ink">Haley’s Star Command</div>
-                <div className="text-xs text-steel">Mission Control</div>
+                <div className="text-xs text-steel"></div>
               </div>
             </div>
             <div className="flex items-center gap-2 text-sm flex-wrap" />
