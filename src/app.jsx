@@ -2830,6 +2830,12 @@ const StrategyApp = () => {
               >
                 2026 Snapshot
               </button>
+              <button
+                onClick={() => setView('marketing')}
+                className={`tab-button text-sm min-w-[200px] ${view === 'marketing' ? 'active' : ''}`}
+              >
+                Marketing
+              </button>
               <select
                 value={SECTION_PAGES.some((item) => item.key === view) ? view : ''}
                 onChange={(event) => {
