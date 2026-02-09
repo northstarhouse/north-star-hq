@@ -17,8 +17,8 @@ const USE_SHEETS = true;
 const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbydaZEpixA_RWAQ42HPsrFe6gCrf5bDYhWbj7COlNwmq-tQOOJaBiivRQfahnGq3WIDeQ/exec';
 const DRIVE_SCRIPT_URL = GOOGLE_SCRIPT_URL;
 const HONEYBOOK_MESSAGES_URL = 'https://docs.google.com/spreadsheets/d/1l-FsSLYELMM5pMwWS92UgKlwPmsrCmNEe7kmrEaQB6M/edit?gid=0#gid=0';
-const HONEYBOOK_MESSAGES_EMBED_URL = 'https://docs.google.com/spreadsheets/d/1l-FsSLYELMM5pMwWS92UgKlwPmsrCmNEe7kmrEaQB6M/preview';
-const VOICEMAILS_EMBED_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSTge4UtsTFma1Y4ppSeC5nVORQiTtVLXXysbHUNdf3sOBb372QR9YG3Q9AfUNbGFD3K2Y0FeP4V5P2/pubhtml?widget=true&headers=false';
+const HONEYBOOK_MESSAGES_EMBED_URL = 'https://docs.google.com/spreadsheets/d/1l-FsSLYELMM5pMwWS92UgKlwPmsrCmNEe7kmrEaQB6M/edit?gid=0#gid=0';
+const VOICEMAILS_EMBED_URL = 'https://docs.google.com/spreadsheets/d/1kqVXngOaf_X1lrB6Nbi5U_3NJ4_P_fGMqxhyqdfuDT0/edit?usp=sharing';
 
 const isValidScriptUrl = (url) =>
   /^https:\/\/script\.google\.com\/macros\/s\/[^/]+\/exec$/i.test(String(url || '').trim());
