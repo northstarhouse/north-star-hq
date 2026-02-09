@@ -2064,11 +2064,13 @@ const HoneybookMessagesView = ({ onBack }) => (
             Public
           </span>
         </div>
-        <iframe
-          title="Honeybook Messages"
-          src={HONEYBOOK_MESSAGES_EMBED_URL}
-          className="w-full h-[70vh] md:h-[80vh] border-0 bg-white"
-        />
+        <div className="h-[72vh] md:h-[84vh]">
+          <iframe
+            title="Honeybook Messages"
+            src={HONEYBOOK_MESSAGES_EMBED_URL}
+            className="w-full h-full border-0 bg-white"
+          />
+        </div>
       </div>
     </div>
   </div>
@@ -2106,11 +2108,13 @@ const VoicemailsView = ({ onBack }) => (
             Public
           </span>
         </div>
-        <iframe
-          title="Voicemails"
-          src={VOICEMAILS_EMBED_URL}
-          className="w-full h-[70vh] md:h-[80vh] border-0 bg-white"
-        />
+        <div className="h-[72vh] md:h-[84vh]">
+          <iframe
+            title="Voicemails"
+            src={VOICEMAILS_EMBED_URL}
+            className="w-full h-full border-0 bg-white"
+          />
+        </div>
       </div>
     </div>
   </div>
