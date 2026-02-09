@@ -19,6 +19,9 @@ const DRIVE_SCRIPT_URL = GOOGLE_SCRIPT_URL;
 const HONEYBOOK_MESSAGES_URL = 'https://docs.google.com/spreadsheets/d/1l-FsSLYELMM5pMwWS92UgKlwPmsrCmNEe7kmrEaQB6M/edit?gid=0#gid=0';
 const HONEYBOOK_MESSAGES_EMBED_URL = 'https://docs.google.com/spreadsheets/d/1l-FsSLYELMM5pMwWS92UgKlwPmsrCmNEe7kmrEaQB6M/preview';
 const VOICEMAILS_EMBED_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSTge4UtsTFma1Y4ppSeC5nVORQiTtVLXXysbHUNdf3sOBb372QR9YG3Q9AfUNbGFD3K2Y0FeP4V5P2/pubhtml?gid=0&single=true&widget=false&headers=false&chrome=false';
+const HONEYBOOK_SHEET_ID = '1l-FsSLYELMM5pMwWS92UgKlwPmsrCmNEe7kmrEaQB6M';
+const VOICEMAILS_SHEET_ID = '1kqVXngOaf_X1lrB6Nbi5U_3NJ4_P_fGMqxhyqdfuDT0';
+const SHEET_LAST_SEEN_KEY = 'nsh-sheet-last-seen-v1';
 
 const isValidScriptUrl = (url) =>
   /^https:\/\/script\.google\.com\/macros\/s\/[^/]+\/exec$/i.test(String(url || '').trim());
@@ -2120,7 +2123,17 @@ const VoicemailsView = ({ onBack }) => (
   </div>
 );
 
-const DashboardView = ({ metrics, majorTodos, onAddTodo, onToggleTodo, onDeleteTodo, onOpenHoneybook, onOpenVoicemails }) => {
+const DashboardView = ({
+  metrics,
+  majorTodos,
+  onAddTodo,
+  onToggleTodo,
+  onDeleteTodo,
+  onOpenHoneybook,
+  onOpenVoicemails,
+  unreadHoneybook,
+  unreadVoicemails
+}) => {
   const [newTodoText, setNewTodoText] = useState('');
 
   const handleAddTodo = () => {
@@ -2251,6 +2264,11 @@ const DashboardView = ({ metrics, majorTodos, onAddTodo, onToggleTodo, onDeleteT
                 <div className="absolute bottom-3 right-4 text-[10px] uppercase tracking-wide text-steel">
                   Live sheet
                 </div>
+                {unreadVoicemails && (
+                  <div className="absolute top-3 right-3 text-[10px] uppercase tracking-wide bg-gold text-white px-2 py-1 rounded-full">
+                    +1 New
+                  </div>
+                )}
               </button>
             ) : item.label === 'Honeybook Messages' ? (
               <button
@@ -2263,6 +2281,11 @@ const DashboardView = ({ metrics, majorTodos, onAddTodo, onToggleTodo, onDeleteT
                 <div className="absolute bottom-3 right-4 text-[10px] uppercase tracking-wide text-steel">
                   Live sheet
                 </div>
+                {unreadHoneybook && (
+                  <div className="absolute top-3 right-3 text-[10px] uppercase tracking-wide bg-gold text-white px-2 py-1 rounded-full">
+                    +1 New
+                  </div>
+                )}
               </button>
             ) : metricLinks[item.label] ? (
               <a
@@ -2520,6 +2543,14 @@ const StrategyApp = () => {
   const [inlineQuarterEdit, setInlineQuarterEdit] = useState(null);
   const [inlineQuarterForm, setInlineQuarterForm] = useState(null);
   const [isSavingInlineQuarter, setIsSavingInlineQuarter] = useState(false);
+  const [sheetLastUpdated, setSheetLastUpdated] = useState({
+    honeybook: null,
+    voicemails: null
+  });
+  const [sheetUnread, setSheetUnread] = useState({
+    honeybook: false,
+    voicemails: false
+  });
   const sectionDetails = SECTION_PAGES.reduce((acc, item) => {
     acc[item.key] = { label: item.label, key: item.sheet };
     return acc;
@@ -2556,6 +2587,57 @@ const StrategyApp = () => {
   useEffect(() => {
     loadData();
   }, []);
+
+  const readLastSeen = () => {
+    try {
+      const raw = localStorage.getItem(SHEET_LAST_SEEN_KEY);
+      return raw ? JSON.parse(raw) : {};
+    } catch (error) {
+      return {};
+    }
+  };
+
+  const writeLastSeen = (next) => {
+    try {
+      localStorage.setItem(SHEET_LAST_SEEN_KEY, JSON.stringify(next));
+    } catch (error) {
+      console.warn('Failed to persist last seen timestamps:', error);
+    }
+  };
+
+  const markSheetSeen = (key, updatedAt) => {
+    const lastSeen = readLastSeen();
+    const next = {
+      ...lastSeen,
+      [key]: updatedAt || new Date().toISOString()
+    };
+    writeLastSeen(next);
+    setSheetUnread((prev) => ({ ...prev, [key]: false }));
+  };
+
+  const fetchSheetLastUpdated = async () => {
+    if (!SheetsAPI.isConfigured()) return;
+    try {
+      const ids = [HONEYBOOK_SHEET_ID, VOICEMAILS_SHEET_ID].join(',');
+      const response = await fetch(`${GOOGLE_SCRIPT_URL}?action=getSheetLastUpdated&ids=${encodeURIComponent(ids)}`);
+      if (!response.ok) throw new Error('Failed to fetch sheet updates');
+      const data = await response.json();
+      if (!data.success || !data.updated) return;
+      const honeybook = data.updated[HONEYBOOK_SHEET_ID] || null;
+      const voicemails = data.updated[VOICEMAILS_SHEET_ID] || null;
+      setSheetLastUpdated({ honeybook, voicemails });
+
+      const lastSeen = readLastSeen();
+      const honeybookUnread = honeybook && (!lastSeen.honeybook || new Date(honeybook) > new Date(lastSeen.honeybook));
+      const voicemailsUnread = voicemails && (!lastSeen.voicemails || new Date(voicemails) > new Date(lastSeen.voicemails));
+      setSheetUnread({
+        honeybook: Boolean(honeybookUnread),
+        voicemails: Boolean(voicemailsUnread)
+      });
+    } catch (error) {
+      console.warn('Failed to check sheet updates:', error);
+    }
+  };
 
   const loadData = async ({ useCache = true } = {}) => {
     if (!USE_SHEETS) {
@@ -2609,6 +2691,13 @@ const StrategyApp = () => {
       }
     }, 0);
   };
+
+  useEffect(() => {
+    if (view !== 'dashboard') return undefined;
+    fetchSheetLastUpdated();
+    const interval = setInterval(fetchSheetLastUpdated, 60 * 60 * 1000);
+    return () => clearInterval(interval);
+  }, [view]);
 
   const handleQuarterlyReviewSave = async (review) => {
     const { focusArea, quarter, ...reviewPayload } = review;
@@ -2780,13 +2869,17 @@ const StrategyApp = () => {
                 onToggleTodo={handleToggleTodo}
                 onDeleteTodo={handleDeleteTodo}
                 onOpenHoneybook={() => {
+                  markSheetSeen('honeybook', sheetLastUpdated.honeybook);
                   setView('honeybook');
                   window.scrollTo(0, 0);
                 }}
                 onOpenVoicemails={() => {
+                  markSheetSeen('voicemails', sheetLastUpdated.voicemails);
                   setView('voicemails');
                   window.scrollTo(0, 0);
                 }}
+                unreadHoneybook={sheetUnread.honeybook}
+                unreadVoicemails={sheetUnread.voicemails}
               />
             )}
             {view === 'honeybook' && (

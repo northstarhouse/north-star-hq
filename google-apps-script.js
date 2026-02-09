@@ -789,6 +789,25 @@ function doGet(e) {
         .createTextOutput(JSON.stringify({ success: true, todos: todos }))
         .setMimeType(ContentService.MimeType.JSON);
     }
+    if (action === 'getSheetLastUpdated') {
+      const idsParam = e.parameter.ids || '';
+      const ids = idsParam
+        .split(',')
+        .map((value) => value.trim())
+        .filter(Boolean);
+      const updated = {};
+      ids.forEach((id) => {
+        try {
+          const file = DriveApp.getFileById(id);
+          updated[id] = file.getLastUpdated().toISOString();
+        } catch (error) {
+          updated[id] = null;
+        }
+      });
+      return ContentService
+        .createTextOutput(JSON.stringify({ success: true, updated: updated }))
+        .setMimeType(ContentService.MimeType.JSON);
+    }
     if (action === 'getBookings') {
       const bookings = getBookings();
       return ContentService
