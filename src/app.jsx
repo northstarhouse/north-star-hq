@@ -16,6 +16,8 @@ const MAJOR_TODOS_CACHE_KEY = 'nsh-strategy-major-todos-v1';
 const USE_SHEETS = true;
 const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbydaZEpixA_RWAQ42HPsrFe6gCrf5bDYhWbj7COlNwmq-tQOOJaBiivRQfahnGq3WIDeQ/exec';
 const DRIVE_SCRIPT_URL = GOOGLE_SCRIPT_URL;
+const HONEYBOOK_MESSAGES_URL = 'https://docs.google.com/spreadsheets/d/1l-FsSLYELMM5pMwWS92UgKlwPmsrCmNEe7kmrEaQB6M/edit?gid=0#gid=0';
+const HONEYBOOK_MESSAGES_EMBED_URL = 'https://docs.google.com/spreadsheets/d/1l-FsSLYELMM5pMwWS92UgKlwPmsrCmNEe7kmrEaQB6M/preview';
 
 const isValidScriptUrl = (url) =>
   /^https:\/\/script\.google\.com\/macros\/s\/[^/]+\/exec$/i.test(String(url || '').trim());
@@ -2021,7 +2023,79 @@ const FocusAreasView = ({ goals, visionStatements, onSaveVision, isSavingVision,
   );
 };
 
-const DashboardView = ({ metrics, majorTodos, onAddTodo, onToggleTodo, onDeleteTodo }) => {
+const HoneybookMessagesView = ({ onBack }) => (
+  <div className="max-w-6xl mx-auto fade-up">
+    <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
+      <div>
+        <div className="text-xs uppercase tracking-[0.3em] text-steel">Voicemails</div>
+        <h2 className="font-display text-3xl text-ink">Honeybook Messages</h2>
+        <p className="text-sm text-stone-500 mt-2">Live Google Sheet with a cleaner workspace.</p>
+      </div>
+      <div className="flex flex-wrap items-center gap-2">
+        <button
+          onClick={onBack}
+          className="px-4 py-2 rounded-xl border border-stone-200 text-sm text-ink bg-white hover:border-gold/60 transition"
+        >
+          <span className="inline-flex items-center gap-2">
+            <IconBack size={16} />
+            Back to Dashboard
+          </span>
+        </button>
+        <a
+          href={HONEYBOOK_MESSAGES_URL}
+          target="_blank"
+          rel="noreferrer"
+          className="px-4 py-2 rounded-xl bg-gold text-white text-sm shadow hover:opacity-90 transition"
+        >
+          Open in Google Sheets
+        </a>
+      </div>
+    </div>
+
+    <div className="grid grid-cols-1 lg:grid-cols-[1fr_320px] gap-6">
+      <div className="glass rounded-3xl border border-stone-100 card-shadow overflow-hidden">
+        <div className="flex items-center justify-between px-5 py-4 border-b border-stone-100 bg-white/80">
+          <div>
+            <div className="text-xs uppercase tracking-wide text-steel">Live sheet</div>
+            <div className="text-sm text-stone-500">Updates as you edit the spreadsheet.</div>
+          </div>
+          <span className="text-[10px] uppercase tracking-wide text-steel bg-stone-100 px-3 py-1 rounded-full">
+            Public
+          </span>
+        </div>
+        <iframe
+          title="Honeybook Messages"
+          src={HONEYBOOK_MESSAGES_EMBED_URL}
+          className="w-full h-[70vh] md:h-[80vh] border-0 bg-white"
+        />
+      </div>
+
+      <div className="glass rounded-3xl border border-stone-100 card-shadow p-5">
+        <div className="text-xs uppercase tracking-wide text-steel">Quick guide</div>
+        <h3 className="font-display text-xl text-ink mt-2">Stay on top of voicemails</h3>
+        <p className="text-sm text-stone-500 mt-2">
+          Use this view for a calmer read-through and quick navigation. Edits still happen in the sheet.
+        </p>
+        <div className="mt-5 space-y-3 text-sm text-stone-600">
+          <div className="flex items-start gap-2">
+            <span className="mt-1 h-2 w-2 rounded-full bg-gold" />
+            <p>Scan newest rows first before calling back.</p>
+          </div>
+          <div className="flex items-start gap-2">
+            <span className="mt-1 h-2 w-2 rounded-full bg-gold" />
+            <p>Mark status updates right after each response.</p>
+          </div>
+          <div className="flex items-start gap-2">
+            <span className="mt-1 h-2 w-2 rounded-full bg-gold" />
+            <p>Open the full sheet for sorting or filters.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+);
+
+const DashboardView = ({ metrics, majorTodos, onAddTodo, onToggleTodo, onDeleteTodo, onOpenHoneybook }) => {
   const [newTodoText, setNewTodoText] = useState('');
 
   const handleAddTodo = () => {
@@ -2141,9 +2215,23 @@ const DashboardView = ({ metrics, majorTodos, onAddTodo, onToggleTodo, onDeleteT
             { label: 'Events booked', value: formatCount(metrics?.eventsCount) },
             { label: 'Sponsors', value: formatCount(metrics?.sponsorsCount) },
             { label: 'Volunteers', value: formatCount(metrics?.volunteersCount) },
-            { label: 'Voicemails', value: 'Voicemails' }
+            { label: 'Voicemails', value: 'Voicemails' },
+            { label: 'Honeybook Messages', value: 'Open' }
           ].map((item) => (
-            metricLinks[item.label] ? (
+            item.label === 'Honeybook Messages' ? (
+              <button
+                key={item.label}
+                onClick={onOpenHoneybook}
+                className="text-left bg-white rounded-2xl p-4 border border-stone-100 card-shadow block transition hover:-translate-y-0.5 hover:shadow-lg focus:outline-none focus-visible:ring-2 focus-visible:ring-gold/60 relative"
+                aria-label="Open Honeybook Messages"
+              >
+                <div className="text-xs uppercase tracking-wide text-steel">{item.label}</div>
+                <div className="font-display text-2xl text-ink mt-2">{item.value}</div>
+                <div className="absolute bottom-3 right-4 text-[10px] uppercase tracking-wide text-steel">
+                  Live sheet
+                </div>
+              </button>
+            ) : metricLinks[item.label] ? (
               <a
                 key={item.label}
                 href={metricLinks[item.label]}
@@ -2658,7 +2746,14 @@ const StrategyApp = () => {
                 onAddTodo={handleAddTodo}
                 onToggleTodo={handleToggleTodo}
                 onDeleteTodo={handleDeleteTodo}
+                onOpenHoneybook={() => {
+                  setView('honeybook');
+                  window.scrollTo(0, 0);
+                }}
               />
+            )}
+            {view === 'honeybook' && (
+              <HoneybookMessagesView onBack={() => setView('dashboard')} />
             )}
             {['construction', 'grounds', 'interiors', 'docents', 'fund', 'events', 'marketing', 'venue'].includes(view) && (
               <div className="max-w-4xl mx-auto fade-up">
