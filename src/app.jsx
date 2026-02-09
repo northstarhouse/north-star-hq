@@ -2233,8 +2233,8 @@ const DashboardView = ({ metrics, majorTodos, onAddTodo, onToggleTodo, onDeleteT
             { label: 'Events booked', value: formatCount(metrics?.eventsCount) },
             { label: 'Sponsors', value: formatCount(metrics?.sponsorsCount) },
             { label: 'Volunteers', value: formatCount(metrics?.volunteersCount) },
-            { label: 'Voicemails', value: 'Open' },
-            { label: 'Honeybook Messages', value: 'Open' }
+            { label: 'Voicemails', value: 'Voicemails' },
+            { label: 'Honeybook Messages', value: 'Honeybook Messages' }
           ].map((item) => (
             item.label === 'Voicemails' ? (
               <button
