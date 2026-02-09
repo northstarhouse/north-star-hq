@@ -57,6 +57,7 @@ const SECTION_PAGES = [
   { key: 'docents', label: 'Docents', sheet: 'Docents' },
   { key: 'fund', label: 'Fundraising', sheet: 'Fundraising' },
   { key: 'events', label: 'Events', sheet: 'Events' },
+  { key: 'marketing-ops', label: 'Marketing', sheet: 'Marketing' },
   { key: 'venue', label: 'Venue', sheet: 'Venue' }
 ];
 
@@ -5139,7 +5140,7 @@ const StrategyApp = () => {
             {view === 'voicemails' && (
               <VoicemailsView onBack={() => setView('dashboard')} />
             )}
-            {['construction', 'grounds', 'interiors', 'docents', 'fund', 'events', 'venue'].includes(view) && (
+            {['construction', 'grounds', 'interiors', 'docents', 'fund', 'events', 'marketing-ops', 'venue'].includes(view) && (
               <div className="max-w-4xl mx-auto fade-up">
                 <div className="bg-white rounded-3xl border border-stone-100 p-6 md:p-8 card-shadow">
                   <div className="flex items-start justify-between gap-3">
