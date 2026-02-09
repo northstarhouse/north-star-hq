@@ -2244,7 +2244,7 @@ const DashboardView = ({ metrics, majorTodos, onAddTodo, onToggleTodo, onDeleteT
               <button
                 key={item.label}
                 onClick={onOpenVoicemails}
-                className="text-left bg-white rounded-2xl p-4 border border-stone-100 card-shadow block transition hover:-translate-y-0.5 hover:shadow-lg focus:outline-none focus-visible:ring-2 focus-visible:ring-gold/60 relative"
+                className="text-center bg-white rounded-2xl p-4 border border-stone-100 card-shadow block transition hover:-translate-y-0.5 hover:shadow-lg focus:outline-none focus-visible:ring-2 focus-visible:ring-gold/60 relative"
                 aria-label="Open Voicemails"
               >
                 <div className="font-display text-2xl text-ink mt-2">{item.value}</div>
@@ -2256,7 +2256,7 @@ const DashboardView = ({ metrics, majorTodos, onAddTodo, onToggleTodo, onDeleteT
               <button
                 key={item.label}
                 onClick={onOpenHoneybook}
-                className="text-left bg-white rounded-2xl p-4 border border-stone-100 card-shadow block transition hover:-translate-y-0.5 hover:shadow-lg focus:outline-none focus-visible:ring-2 focus-visible:ring-gold/60 relative"
+                className="text-center bg-white rounded-2xl p-4 border border-stone-100 card-shadow block transition hover:-translate-y-0.5 hover:shadow-lg focus:outline-none focus-visible:ring-2 focus-visible:ring-gold/60 relative"
                 aria-label="Open Honeybook Messages"
               >
                 <div className="font-display text-2xl text-ink mt-2">{item.value}</div>
