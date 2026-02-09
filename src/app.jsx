@@ -18,6 +18,7 @@ const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbydaZEpixA_RW
 const DRIVE_SCRIPT_URL = GOOGLE_SCRIPT_URL;
 const HONEYBOOK_MESSAGES_URL = 'https://docs.google.com/spreadsheets/d/1l-FsSLYELMM5pMwWS92UgKlwPmsrCmNEe7kmrEaQB6M/edit?gid=0#gid=0';
 const HONEYBOOK_MESSAGES_EMBED_URL = 'https://docs.google.com/spreadsheets/d/1l-FsSLYELMM5pMwWS92UgKlwPmsrCmNEe7kmrEaQB6M/preview';
+const VOICEMAILS_EMBED_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSTge4UtsTFma1Y4ppSeC5nVORQiTtVLXXysbHUNdf3sOBb372QR9YG3Q9AfUNbGFD3K2Y0FeP4V5P2/pubhtml?widget=true&headers=false';
 
 const isValidScriptUrl = (url) =>
   /^https:\/\/script\.google\.com\/macros\/s\/[^/]+\/exec$/i.test(String(url || '').trim());
@@ -2073,7 +2074,49 @@ const HoneybookMessagesView = ({ onBack }) => (
   </div>
 );
 
-const DashboardView = ({ metrics, majorTodos, onAddTodo, onToggleTodo, onDeleteTodo, onOpenHoneybook }) => {
+const VoicemailsView = ({ onBack }) => (
+  <div className="max-w-6xl mx-auto fade-up">
+    <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
+      <div>
+        <div className="text-xs uppercase tracking-[0.3em] text-steel">Voicemails</div>
+        <h2 className="font-display text-3xl text-ink">Voicemail Log</h2>
+        <p className="text-sm text-stone-500 mt-2">Live sheet in a calmer layout.</p>
+      </div>
+      <div className="flex flex-wrap items-center gap-2">
+        <button
+          onClick={onBack}
+          className="px-4 py-2 rounded-xl border border-stone-200 text-sm text-ink bg-white hover:border-gold/60 transition"
+        >
+          <span className="inline-flex items-center gap-2">
+            <IconBack size={16} />
+            Back to Dashboard
+          </span>
+        </button>
+      </div>
+    </div>
+
+    <div className="grid grid-cols-1 gap-6">
+      <div className="glass rounded-3xl border border-stone-100 card-shadow overflow-hidden">
+        <div className="flex items-center justify-between px-5 py-4 border-b border-stone-100 bg-white/80">
+          <div>
+            <div className="text-xs uppercase tracking-wide text-steel">Live sheet</div>
+            <div className="text-sm text-stone-500">Updates as you edit the spreadsheet.</div>
+          </div>
+          <span className="text-[10px] uppercase tracking-wide text-steel bg-stone-100 px-3 py-1 rounded-full">
+            Public
+          </span>
+        </div>
+        <iframe
+          title="Voicemails"
+          src={VOICEMAILS_EMBED_URL}
+          className="w-full h-[70vh] md:h-[80vh] border-0 bg-white"
+        />
+      </div>
+    </div>
+  </div>
+);
+
+const DashboardView = ({ metrics, majorTodos, onAddTodo, onToggleTodo, onDeleteTodo, onOpenHoneybook, onOpenVoicemails }) => {
   const [newTodoText, setNewTodoText] = useState('');
 
   const handleAddTodo = () => {
@@ -2091,7 +2134,6 @@ const DashboardView = ({ metrics, majorTodos, onAddTodo, onToggleTodo, onDeleteT
   const completedTodos = majorTodos.filter((t) => t.done);
 
   const metricLinks = {
-    Voicemails: 'https://northstarhouse.github.io/nsh-voicemails/',
     'Events booked': 'https://northstarhouse.github.io/north-star-bookings-log/',
     Volunteers: 'https://northstarhouse.github.io/Volunteer-Database/',
     'Donation total': 'https://northstarhouse.github.io/donation-database/',
@@ -2191,10 +2233,23 @@ const DashboardView = ({ metrics, majorTodos, onAddTodo, onToggleTodo, onDeleteT
             { label: 'Events booked', value: formatCount(metrics?.eventsCount) },
             { label: 'Sponsors', value: formatCount(metrics?.sponsorsCount) },
             { label: 'Volunteers', value: formatCount(metrics?.volunteersCount) },
-            { label: 'Voicemails', value: 'Voicemails' },
+            { label: 'Voicemails', value: 'Open' },
             { label: 'Honeybook Messages', value: 'Open' }
           ].map((item) => (
-            item.label === 'Honeybook Messages' ? (
+            item.label === 'Voicemails' ? (
+              <button
+                key={item.label}
+                onClick={onOpenVoicemails}
+                className="text-left bg-white rounded-2xl p-4 border border-stone-100 card-shadow block transition hover:-translate-y-0.5 hover:shadow-lg focus:outline-none focus-visible:ring-2 focus-visible:ring-gold/60 relative"
+                aria-label="Open Voicemails"
+              >
+                <div className="text-xs uppercase tracking-wide text-steel">{item.label}</div>
+                <div className="font-display text-2xl text-ink mt-2">{item.value}</div>
+                <div className="absolute bottom-3 right-4 text-[10px] uppercase tracking-wide text-steel">
+                  Live sheet
+                </div>
+              </button>
+            ) : item.label === 'Honeybook Messages' ? (
               <button
                 key={item.label}
                 onClick={onOpenHoneybook}
@@ -2726,10 +2781,17 @@ const StrategyApp = () => {
                   setView('honeybook');
                   window.scrollTo(0, 0);
                 }}
+                onOpenVoicemails={() => {
+                  setView('voicemails');
+                  window.scrollTo(0, 0);
+                }}
               />
             )}
             {view === 'honeybook' && (
               <HoneybookMessagesView onBack={() => setView('dashboard')} />
+            )}
+            {view === 'voicemails' && (
+              <VoicemailsView onBack={() => setView('dashboard')} />
             )}
             {['construction', 'grounds', 'interiors', 'docents', 'fund', 'events', 'marketing', 'venue'].includes(view) && (
               <div className="max-w-4xl mx-auto fade-up">
