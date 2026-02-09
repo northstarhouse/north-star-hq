@@ -2243,7 +2243,6 @@ const DashboardView = ({ metrics, majorTodos, onAddTodo, onToggleTodo, onDeleteT
                 className="text-left bg-white rounded-2xl p-4 border border-stone-100 card-shadow block transition hover:-translate-y-0.5 hover:shadow-lg focus:outline-none focus-visible:ring-2 focus-visible:ring-gold/60 relative"
                 aria-label="Open Voicemails"
               >
-                <div className="text-xs uppercase tracking-wide text-steel">{item.label}</div>
                 <div className="font-display text-2xl text-ink mt-2">{item.value}</div>
                 <div className="absolute bottom-3 right-4 text-[10px] uppercase tracking-wide text-steel">
                   Live sheet
@@ -2256,7 +2255,6 @@ const DashboardView = ({ metrics, majorTodos, onAddTodo, onToggleTodo, onDeleteT
                 className="text-left bg-white rounded-2xl p-4 border border-stone-100 card-shadow block transition hover:-translate-y-0.5 hover:shadow-lg focus:outline-none focus-visible:ring-2 focus-visible:ring-gold/60 relative"
                 aria-label="Open Honeybook Messages"
               >
-                <div className="text-xs uppercase tracking-wide text-steel">{item.label}</div>
                 <div className="font-display text-2xl text-ink mt-2">{item.value}</div>
                 <div className="absolute bottom-3 right-4 text-[10px] uppercase tracking-wide text-steel">
                   Live sheet
