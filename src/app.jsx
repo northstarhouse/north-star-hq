@@ -2131,10 +2131,8 @@ const DashboardView = ({ metrics, majorTodos, onAddTodo, onToggleTodo, onDeleteT
         <div className="glass rounded-3xl p-6 md:p-8 card-shadow">
           <div className="flex items-center gap-3 text-gold">
             <IconSpark size={28} />
-            <span className="text-xs uppercase tracking-wide">The Big Picture</span>
+            <span className="text-xs uppercase tracking-wide">Mission Control</span>
           </div>
-          <h2 className="font-display text-xl md:text-2xl text-ink mt-4">Major Focus To-Do List</h2>
-          <p className="text-stone-500 text-xs mt-1 mb-4">The items that matter most right now.</p>
 
           <div className="flex gap-2 mb-4">
             <input
