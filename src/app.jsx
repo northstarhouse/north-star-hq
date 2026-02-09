@@ -2107,9 +2107,9 @@ const DashboardView = ({ metrics, majorTodos, onAddTodo, onToggleTodo, onDeleteT
     <div className="max-w-6xl mx-auto fade-up">
       <div className="grid grid-cols-1 lg:grid-cols-[1.2fr_0.8fr] gap-6">
         <div className="glass rounded-3xl p-6 md:p-8 card-shadow">
-          <div className="flex items-center gap-3 text-gold">
+          <div className="flex items-center gap-3 text-gold mb-4">
             <IconSpark size={28} />
-            <span className="text-xs uppercase tracking-wide">Mission Control</span>
+            <span className="text-sm uppercase tracking-[0.25em] font-semibold">Mission Control</span>
           </div>
 
           <div className="flex gap-2 mb-4">
