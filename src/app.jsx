@@ -4914,7 +4914,28 @@ const StrategyApp = () => {
         writeSimpleCache(SNAPSHOTS_CACHE_KEY, snapshotResult.value);
       }
       if (todosResult.status === 'fulfilled' && todosResult.value?.length) {
-        saveMajorTodos(todosResult.value);
+        // Merge server todos with local state: prefer local done/completedAt
+        // to avoid overwriting toggles that haven't synced yet
+        setMajorTodos((localTodos) => {
+          const localMap = {};
+          localTodos.forEach((t) => { localMap[t.id] = t; });
+          const merged = todosResult.value.map((serverTodo) => {
+            const local = localMap[serverTodo.id];
+            if (local && local.done !== serverTodo.done) {
+              // Local toggle hasn't synced yet — keep local state
+              return local;
+            }
+            return serverTodo;
+          });
+          // Also keep any local-only todos (added but not yet synced)
+          localTodos.forEach((lt) => {
+            if (!todosResult.value.find((st) => st.id === lt.id)) {
+              merged.push(lt);
+            }
+          });
+          writeSimpleCache(MAJOR_TODOS_CACHE_KEY, merged);
+          return merged;
+        });
       }
     } catch (error) {
       console.error('Failed to load data:', error);

@@ -471,6 +471,9 @@ function getMajorTodos() {
   const data = sheet.getDataRange().getValues();
   if (data.length <= 1) return [];
   const headers = data[0];
+  // Validate headers match expected structure
+  const hasExpectedHeaders = MAJOR_TODOS_HEADERS.every((h) => headers.indexOf(h) >= 0);
+  if (!hasExpectedHeaders) return [];
   return data.slice(1)
     .filter((row) => row[0])
     .map((row) => {
@@ -478,7 +481,8 @@ function getMajorTodos() {
       headers.forEach((h, i) => { obj[h] = row[i]; });
       obj.done = obj.done === true || obj.done === 'true';
       return obj;
-    });
+    })
+    .filter((todo) => todo.id && todo.text);
 }
 
 function saveMajorTodo(todo) {
