@@ -4557,6 +4557,22 @@ const DashboardView = ({
               </div>
             )
           ))}
+          <div className="col-span-2 grid grid-cols-2 gap-3 mt-1">
+            {[
+              { label: 'Archives', href: 'https://northstarhouse.github.io/north-star-archives/', icon: '\u{1F4DA}' },
+              { label: 'Event Planning', href: 'https://northstarhouse.github.io/nsh-events-committee/', icon: '\u{1F4CB}' }
+            ].map((link) => (
+              <a
+                key={link.label}
+                href={link.href}
+                className="flex items-center gap-2 bg-white/80 rounded-xl px-4 py-2.5 border border-stone-100 text-sm font-medium text-ink transition hover:-translate-y-0.5 hover:shadow-md hover:border-gold/30 focus:outline-none focus-visible:ring-2 focus-visible:ring-gold/60"
+              >
+                <span>{link.icon}</span>
+                <span>{link.label}</span>
+                <svg className="w-3.5 h-3.5 ml-auto text-steel" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M7 17L17 7M17 7H7M17 7v10" /></svg>
+              </a>
+            ))}
+          </div>
         </div>
       </div>
     </div>
