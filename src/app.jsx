@@ -4516,45 +4516,9 @@ const DashboardView = ({
             { label: 'Donation total', value: formatCurrency(metrics?.donationsTotal) },
             { label: 'Events booked', value: formatCount(metrics?.eventsCount) },
             { label: 'Sponsors', value: formatCount(metrics?.sponsorsCount) },
-            { label: 'Volunteers', value: formatCount(metrics?.volunteersCount) },
-            { label: 'Voicemails', value: 'Voicemails' },
-            { label: 'Honeybook Messages', value: 'Honeybook Messages' }
+            { label: 'Volunteers', value: formatCount(metrics?.volunteersCount) }
           ].map((item) => (
-            item.label === 'Voicemails' ? (
-              <button
-                key={item.label}
-                onClick={onOpenVoicemails}
-                className="text-center bg-white rounded-2xl p-4 border border-stone-100 card-shadow block transition hover:-translate-y-0.5 hover:shadow-lg focus:outline-none focus-visible:ring-2 focus-visible:ring-gold/60 relative"
-                aria-label="Open Voicemails"
-              >
-                <div className="font-display text-2xl text-ink mt-2">{item.value}</div>
-                <div className="absolute bottom-3 right-4 text-[10px] uppercase tracking-wide text-steel">
-                  Live sheet
-                </div>
-                {unreadVoicemails && (
-                  <div className="absolute top-3 right-3 text-[10px] uppercase tracking-wide bg-gold text-white px-2 py-1 rounded-full">
-                    +1 New
-                  </div>
-                )}
-              </button>
-            ) : item.label === 'Honeybook Messages' ? (
-              <button
-                key={item.label}
-                onClick={onOpenHoneybook}
-                className="text-center bg-white rounded-2xl p-4 border border-stone-100 card-shadow block transition hover:-translate-y-0.5 hover:shadow-lg focus:outline-none focus-visible:ring-2 focus-visible:ring-gold/60 relative"
-                aria-label="Open Honeybook Messages"
-              >
-                <div className="font-display text-2xl text-ink mt-2">{item.value}</div>
-                <div className="absolute bottom-3 right-4 text-[10px] uppercase tracking-wide text-steel">
-                  Live sheet
-                </div>
-                {unreadHoneybook && (
-                  <div className="absolute top-3 right-3 text-[10px] uppercase tracking-wide bg-gold text-white px-2 py-1 rounded-full">
-                    +1 New
-                  </div>
-                )}
-              </button>
-            ) : metricLinks[item.label] ? (
+            metricLinks[item.label] ? (
               <a
                 key={item.label}
                 href={metricLinks[item.label]}
@@ -4595,6 +4559,26 @@ const DashboardView = ({
                 {link.label}
               </a>
             ))}
+            <button
+              onClick={onOpenVoicemails}
+              className="inline-flex items-center gap-1.5 rounded-lg border border-stone-200 bg-white/60 px-3 py-1.5 text-xs font-medium text-ink/80 transition hover:border-gold/40 hover:bg-white hover:text-ink relative"
+            >
+              <svg className="w-3 h-3 text-gold/70 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" /></svg>
+              Voicemails
+              {unreadVoicemails && (
+                <span className="w-2 h-2 rounded-full bg-gold flex-shrink-0" />
+              )}
+            </button>
+            <button
+              onClick={onOpenHoneybook}
+              className="inline-flex items-center gap-1.5 rounded-lg border border-stone-200 bg-white/60 px-3 py-1.5 text-xs font-medium text-ink/80 transition hover:border-gold/40 hover:bg-white hover:text-ink relative"
+            >
+              <svg className="w-3 h-3 text-gold/70 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" /></svg>
+              Honeybook Messages
+              {unreadHoneybook && (
+                <span className="w-2 h-2 rounded-full bg-gold flex-shrink-0" />
+              )}
+            </button>
           </div>
         </div>
       </div>
