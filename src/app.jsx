@@ -4408,6 +4408,7 @@ const DashboardView = ({
   return (
     <div className="max-w-6xl mx-auto fade-up">
       <div className="grid grid-cols-1 lg:grid-cols-[1.2fr_0.8fr] gap-6">
+        <div className="flex flex-col gap-4">
         <div className="glass rounded-3xl p-6 md:p-8 card-shadow">
           <div className="flex items-center gap-3 text-gold mb-4">
             <IconSpark size={28} />
@@ -4486,7 +4487,9 @@ const DashboardView = ({
               </div>
             )}
           </div>
-          <div className="flex flex-wrap gap-2 mt-4">
+        </div>
+        <div className="glass rounded-2xl p-4 card-shadow">
+          <div className="flex flex-wrap gap-2">
             {[
               { label: 'In-Kind Donation Form', href: 'https://drive.google.com/file/d/1cNGysqW__wS2IEKDaNzG1MPo-5JCE-ay/view' },
               { label: 'Reimbursement Form', href: 'https://drive.google.com/file/d/1Vkfh6Z5eM1RPUtw6j8mQjqKM71-YFPrW/view?usp=drive_link' },
@@ -4506,6 +4509,7 @@ const DashboardView = ({
               </a>
             ))}
           </div>
+        </div>
         </div>
         <div className="grid grid-cols-2 gap-4">
           {[
@@ -4579,17 +4583,16 @@ const DashboardView = ({
           ))}
           <div className="col-span-2 grid grid-cols-2 gap-3 mt-1">
             {[
-              { label: 'Archives', href: 'https://northstarhouse.github.io/north-star-archives/', icon: '\u{1F4DA}' },
-              { label: 'Event Planning', href: 'https://northstarhouse.github.io/nsh-events-committee/', icon: '\u{1F4CB}' }
+              { label: 'Event Planning', href: 'https://northstarhouse.github.io/nsh-events-committee/' },
+              { label: 'Archives', href: 'https://northstarhouse.github.io/north-star-archives/' }
             ].map((link) => (
               <a
                 key={link.label}
                 href={link.href}
-                className="flex items-center gap-2 bg-white/80 rounded-xl px-4 py-2.5 border border-stone-100 text-sm font-medium text-ink transition hover:-translate-y-0.5 hover:shadow-md hover:border-gold/30 focus:outline-none focus-visible:ring-2 focus-visible:ring-gold/60"
+                className="inline-flex items-center gap-1.5 rounded-lg border border-stone-200 bg-white/60 px-3 py-1.5 text-xs font-medium text-ink/80 transition hover:border-gold/40 hover:bg-white hover:text-ink"
               >
-                <span>{link.icon}</span>
-                <span>{link.label}</span>
-                <svg className="w-3.5 h-3.5 ml-auto text-steel" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M7 17L17 7M17 7H7M17 7v10" /></svg>
+                <svg className="w-3 h-3 text-gold/70 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M7 17L17 7M17 7H7M17 7v10" /></svg>
+                {link.label}
               </a>
             ))}
           </div>
