@@ -4822,6 +4822,8 @@ const StrategyApp = () => {
     return acc;
   }, {});
 
+  const deletedTodoIds = useRef(new Set());
+
   const saveMajorTodos = (next) => {
     setMajorTodos(next);
     writeSimpleCache(MAJOR_TODOS_CACHE_KEY, next);
@@ -4845,6 +4847,7 @@ const StrategyApp = () => {
   };
 
   const handleDeleteTodo = (id) => {
+    deletedTodoIds.current.add(id);
     const next = majorTodos.filter((t) => t.id !== id);
     saveMajorTodos(next);
     SheetsAPI.deleteMajorTodo(id);
@@ -4937,22 +4940,23 @@ const StrategyApp = () => {
         writeSimpleCache(SNAPSHOTS_CACHE_KEY, snapshotResult.value);
       }
       if (todosResult.status === 'fulfilled' && todosResult.value?.length) {
-        // Merge server todos with local state: prefer local done/completedAt
-        // to avoid overwriting toggles that haven't synced yet
+        // Merge server todos with local state: skip locally deleted items,
+        // prefer local done/completedAt to avoid overwriting pending toggles
         setMajorTodos((localTodos) => {
           const localMap = {};
           localTodos.forEach((t) => { localMap[t.id] = t; });
-          const merged = todosResult.value.map((serverTodo) => {
-            const local = localMap[serverTodo.id];
-            if (local && local.done !== serverTodo.done) {
-              // Local toggle hasn't synced yet — keep local state
-              return local;
-            }
-            return serverTodo;
-          });
+          const merged = todosResult.value
+            .filter((serverTodo) => !deletedTodoIds.current.has(serverTodo.id))
+            .map((serverTodo) => {
+              const local = localMap[serverTodo.id];
+              if (local && local.done !== serverTodo.done) {
+                return local;
+              }
+              return serverTodo;
+            });
           // Also keep any local-only todos (added but not yet synced)
           localTodos.forEach((lt) => {
-            if (!todosResult.value.find((st) => st.id === lt.id)) {
+            if (!todosResult.value.find((st) => st.id === lt.id) && !deletedTodoIds.current.has(lt.id)) {
               merged.push(lt);
             }
           });
