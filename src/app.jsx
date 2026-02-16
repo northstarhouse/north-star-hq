@@ -3983,13 +3983,23 @@ const EventManagementApp = () => {
                 Current focus: {monthLabels[previewMonthIndex]}
               </p>
             </div>
-            <button
-              type="button"
-              className="text-xs text-amber-700 font-medium"
-              onClick={() => setShowNewsletterModal(true)}
-            >
-              Open
-            </button>
+            <div className="flex items-center gap-3">
+              <a
+                href="https://docs.google.com/spreadsheets/d/1dLNdvhcW1_36brUdahk_eh73qx127GYM8djHMJbyazg/edit?gid=764171934#gid=764171934"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-xs text-amber-700 font-medium"
+              >
+                Newsletter Stats
+              </a>
+              <button
+                type="button"
+                className="text-xs text-amber-700 font-medium"
+                onClick={() => setShowNewsletterModal(true)}
+              >
+                Open
+              </button>
+            </div>
           </div>
           <div className="text-sm text-stone-700">
             {previewEntry.mainFeature ||
