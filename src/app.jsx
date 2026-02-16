@@ -2908,6 +2908,47 @@ const EventManagementApp = () => {
   };
 
   useEffect(() => {
+    // Cache-first: show cached data instantly, then refresh from network
+    try {
+      const cachedEvents = localStorage.getItem(STORAGE_KEY);
+      if (cachedEvents) {
+        const parsed = JSON.parse(cachedEvents);
+        if (Array.isArray(parsed)) setEvents(parsed);
+      }
+    } catch (e) {}
+    try {
+      const cachedNewsletter = localStorage.getItem(NEWSLETTER_STORAGE_KEY);
+      if (cachedNewsletter) {
+        const parsed = JSON.parse(cachedNewsletter);
+        if (parsed && typeof parsed === 'object') setNewsletterData(parsed);
+      }
+    } catch (e) {}
+    try {
+      const cachedPosting = localStorage.getItem(POSTING_STORAGE_KEY);
+      if (cachedPosting) {
+        const parsed = JSON.parse(cachedPosting);
+        if (parsed && typeof parsed === 'object') setPostingData(parsed);
+      }
+    } catch (e) {}
+    try {
+      const cachedPressReleases = localStorage.getItem(PRESS_RELEASE_STORAGE_KEY);
+      if (cachedPressReleases) {
+        const parsed = JSON.parse(cachedPressReleases);
+        if (parsed && typeof parsed === 'object') setPressReleaseData(parsed);
+      }
+    } catch (e) {}
+    try {
+      const cachedBookings = localStorage.getItem(BOOKINGS_STORAGE_KEY);
+      if (cachedBookings) {
+        const parsed = JSON.parse(cachedBookings);
+        if (Array.isArray(parsed)) {
+          setBookingsData(parsed);
+          setBookingsCount(parsed.length);
+        }
+      }
+    } catch (e) {}
+
+    // Then refresh from network in background
     loadEvents();
     loadNewsletter();
     loadPosting();
