@@ -4495,7 +4495,8 @@ const DashboardView = ({
               { label: 'Reimbursement Form', href: 'https://drive.google.com/file/d/1Vkfh6Z5eM1RPUtw6j8mQjqKM71-YFPrW/view?usp=drive_link' },
               { label: 'Board Submission Form', href: 'https://drive.google.com/file/d/1_-AcaquXeK-O1x9AOubbQNCwoLWzu3f_/view?usp=drive_link' },
               { label: 'Incident & Injury Form', href: 'https://drive.google.com/file/d/1UNzWO6b_-YbKd_rYUxC5GkA2dRQVfcg-/view?usp=drive_link' },
-              { label: 'Brick Form', href: 'https://drive.google.com/drive/folders/1m7RLU9lwPS_0N-qqwP2aNJaz6fp6UXQt?dmr=1&ec=wgc-drive-%5Bmodule%5D-goto' }
+              { label: 'Brick Form', href: 'https://drive.google.com/drive/folders/1m7RLU9lwPS_0N-qqwP2aNJaz6fp6UXQt?dmr=1&ec=wgc-drive-%5Bmodule%5D-goto' },
+              { label: 'Thank You Notes', href: 'https://drive.google.com/drive/folders/1Mi8nNZzNWx1fz7CQ11XiW8SHPqQnBAgR?usp=sharing' }
             ].map((form) => (
               <a
                 key={form.label}
