@@ -2176,6 +2176,9 @@ const EventManagementApp = () => {
   const [bookingsData, setBookingsData] = useState([]);
   const [bookingsCount, setBookingsCount] = useState(0);
   const [showBookingsModal, setShowBookingsModal] = useState(false);
+  const [newsletterStatsData, setNewsletterStatsData] = useState({});
+  const [showNewsletterStatsModal, setShowNewsletterStatsModal] = useState(false);
+  const [newsletterStatsMonth, setNewsletterStatsMonth] = useState(new Date().getMonth());
   const SHEETS_API_URL = 'https://script.google.com/macros/s/AKfycbzcuMhZ1h15zP7IgYhyCBChgkx_mbe23G6756V2_lHNT1grfgKR-AuZxbHt3t806h8-/exec';
   const STORAGE_KEY = 'nsh-events-cache-v1';
   const FLYER_KEY = 'nsh-event-flyers-v1';
@@ -2183,6 +2186,7 @@ const EventManagementApp = () => {
   const POSTING_STORAGE_KEY = 'nsh-posting-schedule-v1';
   const PRESS_RELEASE_STORAGE_KEY = 'nsh-press-release-cache-v1';
   const BOOKINGS_STORAGE_KEY = 'nsh-bookings-cache-v1';
+  const NEWSLETTER_STATS_STORAGE_KEY = 'nsh-newsletter-stats-v1';
 
   const monthLabels = [
     'January',
@@ -2206,6 +2210,17 @@ const EventManagementApp = () => {
     { id: 'volunteerHours', label: 'Volunteer Monthly Hours' },
     { id: 'donationNeeds', label: 'Donation Needs' },
     { id: 'other', label: 'Other' }
+  ];
+
+  const newsletterStatsFields = [
+    { id: 'edition', label: 'Newsletter Edition' },
+    { id: 'bricksDonationsLoyalty', label: 'Bricks - Donations - Loyalty Program' },
+    { id: 'volunteers', label: 'Volunteers' },
+    { id: 'calendar', label: 'Calendar' },
+    { id: 'feature', label: 'Feature' },
+    { id: 'goFundMe', label: 'GoFundMe' },
+    { id: 'fundraisingBroughtIn', label: 'Fundraising Brought In' },
+    { id: 'notes', label: 'Notes' }
   ];
 
   const pressReleaseFields = [
@@ -2484,6 +2499,18 @@ const EventManagementApp = () => {
     }
   };
 
+  const normalizeNewsletterStatsEntry = (entry, monthIndex) => ({
+    month: monthIndex + 1,
+    edition: entry?.edition || '',
+    bricksDonationsLoyalty: entry?.bricksDonationsLoyalty || '',
+    volunteers: entry?.volunteers || '',
+    calendar: entry?.calendar || '',
+    feature: entry?.feature || '',
+    goFundMe: entry?.goFundMe || '',
+    fundraisingBroughtIn: entry?.fundraisingBroughtIn || '',
+    notes: entry?.notes || ''
+  });
+
   const normalizeNewsletterEntry = (entry, monthIndex) => ({
     month: monthIndex + 1,
     published: Boolean(entry?.published),
@@ -2555,6 +2582,10 @@ const EventManagementApp = () => {
 
   const persistBookings = (nextData) => {
     localStorage.setItem(BOOKINGS_STORAGE_KEY, JSON.stringify(nextData));
+  };
+
+  const persistNewsletterStats = (nextData) => {
+    localStorage.setItem(NEWSLETTER_STATS_STORAGE_KEY, JSON.stringify(nextData));
   };
 
   const loadNewsletter = async () => {
@@ -2687,6 +2718,67 @@ const EventManagementApp = () => {
         }
       }
     }
+  };
+
+  const loadNewsletterStats = async () => {
+    if (!SHEETS_API_URL) return;
+    try {
+      const response = await fetch(`${SHEETS_API_URL}?action=newsletter_stats_list`);
+      if (!response.ok) {
+        throw new Error(`Newsletter stats load failed: ${response.status}`);
+      }
+      const data = await response.json();
+      const entries = Array.isArray(data.entries) ? data.entries : [];
+      const mapped = entries.reduce((acc, entry) => {
+        const monthValue = parseInt(entry.month, 10);
+        if (!Number.isNaN(monthValue) && monthValue >= 1 && monthValue <= 12) {
+          acc[monthValue - 1] = normalizeNewsletterStatsEntry(entry, monthValue - 1);
+        }
+        return acc;
+      }, {});
+      setNewsletterStatsData(mapped);
+      persistNewsletterStats(mapped);
+    } catch (error) {
+      console.error('Failed to load newsletter stats', error);
+      const cached = localStorage.getItem(NEWSLETTER_STATS_STORAGE_KEY);
+      if (cached) {
+        try {
+          const parsed = JSON.parse(cached);
+          if (parsed && typeof parsed === 'object') {
+            setNewsletterStatsData(parsed);
+          }
+        } catch (parseError) {
+          console.error('Failed to parse cached newsletter stats', parseError);
+        }
+      }
+    }
+  };
+
+  const saveNewsletterStatsEntry = async (monthIndex, entry) => {
+    if (!SHEETS_API_URL) return;
+    const payload = normalizeNewsletterStatsEntry(entry, monthIndex);
+    try {
+      await fetch(SHEETS_API_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+        body: JSON.stringify({ action: 'newsletter_stats_upsert', entry: payload })
+      });
+    } catch (error) {
+      console.error('Failed to save newsletter stats entry', error);
+    }
+  };
+
+  const updateNewsletterStatsField = (monthIndex, field, value) => {
+    setNewsletterStatsData(prev => {
+      const nextEntry = {
+        ...normalizeNewsletterStatsEntry(prev[monthIndex], monthIndex),
+        [field]: value
+      };
+      const nextData = { ...prev, [monthIndex]: nextEntry };
+      persistNewsletterStats(nextData);
+      saveNewsletterStatsEntry(monthIndex, nextEntry);
+      return nextData;
+    });
   };
 
   const saveNewsletterEntry = async (monthIndex, entry) => {
@@ -2947,6 +3039,13 @@ const EventManagementApp = () => {
         }
       }
     } catch (e) {}
+    try {
+      const cachedNewsletterStats = localStorage.getItem(NEWSLETTER_STATS_STORAGE_KEY);
+      if (cachedNewsletterStats) {
+        const parsed = JSON.parse(cachedNewsletterStats);
+        if (parsed && typeof parsed === 'object') setNewsletterStatsData(parsed);
+      }
+    } catch (e) {}
 
     // Then refresh from network in background
     loadEvents();
@@ -2954,6 +3053,7 @@ const EventManagementApp = () => {
     loadPosting();
     loadPressReleases();
     loadBookings();
+    loadNewsletterStats();
   }, []);
 
   const calculateDaysUntil = (dateString) => {
@@ -3983,23 +4083,13 @@ const EventManagementApp = () => {
                 Current focus: {monthLabels[previewMonthIndex]}
               </p>
             </div>
-            <div className="flex items-center gap-3">
-              <a
-                href="https://docs.google.com/spreadsheets/d/1dLNdvhcW1_36brUdahk_eh73qx127GYM8djHMJbyazg/edit?gid=764171934#gid=764171934"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-xs text-amber-700 font-medium"
-              >
-                Newsletter Stats
-              </a>
-              <button
-                type="button"
-                className="text-xs text-amber-700 font-medium"
-                onClick={() => setShowNewsletterModal(true)}
-              >
-                Open
-              </button>
-            </div>
+            <button
+              type="button"
+              className="text-xs text-amber-700 font-medium"
+              onClick={() => setShowNewsletterModal(true)}
+            >
+              Open
+            </button>
           </div>
           <div className="text-sm text-stone-700">
             {previewEntry.mainFeature ||
@@ -4014,6 +4104,30 @@ const EventManagementApp = () => {
             {currentNewsletter && currentNewsletter.published
               ? `Published - previewing ${monthLabels[previewMonthIndex]}`
               : `Draft - ${monthLabels[previewMonthIndex]}`}
+          </div>
+        </div>
+
+        <div className="mt-6 bg-white rounded-lg border border-stone-200 shadow-sm p-6">
+          <div className="flex items-start justify-between gap-4 mb-2">
+            <div>
+              <h2 className="text-lg font-medium text-stone-900">Newsletter Stats</h2>
+              <p className="text-xs text-stone-500">
+                Current focus: {monthLabels[newsletterStatsMonth]}
+              </p>
+            </div>
+            <button
+              type="button"
+              className="text-xs text-amber-700 font-medium"
+              onClick={() => setShowNewsletterStatsModal(true)}
+            >
+              Open
+            </button>
+          </div>
+          <div className="text-sm text-stone-700">
+            {newsletterStatsData[newsletterStatsMonth]?.edition ||
+              newsletterStatsData[newsletterStatsMonth]?.feature ||
+              newsletterStatsData[newsletterStatsMonth]?.fundraisingBroughtIn ||
+              'Add newsletter stats for this month.'}
           </div>
         </div>
 
@@ -4143,6 +4257,67 @@ const EventManagementApp = () => {
                       value={newsletterData[newsletterMonth]?.[field.id] || ''}
                       onChange={(e) => updateNewsletterField(newsletterMonth, field.id, e.target.value)}
                       rows={3}
+                      className="flex-1 px-4 py-2 border border-stone-200 rounded-md focus:ring-2 focus:ring-amber-400 focus:border-transparent bg-white text-sm"
+                      placeholder={`Add ${field.label.toLowerCase()}...`}
+                    />
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showNewsletterStatsModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-lg shadow-xl max-w-3xl w-full max-h-[90vh] overflow-y-auto border border-stone-200">
+            <div className="p-6 border-b border-stone-200 flex items-center justify-between">
+              <div>
+                <h2 className="text-xl font-light text-stone-900">Newsletter Stats</h2>
+                <p className="text-xs text-stone-500">Track month-by-month newsletter performance.</p>
+              </div>
+              <button
+                type="button"
+                className="text-sm text-stone-600 hover:text-stone-800"
+                onClick={() => setShowNewsletterStatsModal(false)}
+              >
+                Close
+              </button>
+            </div>
+
+            <div className="p-6 space-y-6">
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    className="px-3 py-2 border border-stone-200 rounded-md text-sm text-stone-600 hover:bg-stone-50"
+                    onClick={() => setNewsletterStatsMonth((newsletterStatsMonth + 11) % 12)}
+                  >
+                    Prev
+                  </button>
+                  <div className="text-sm font-medium text-stone-900">
+                    {monthLabels[newsletterStatsMonth]}
+                  </div>
+                  <button
+                    type="button"
+                    className="px-3 py-2 border border-stone-200 rounded-md text-sm text-stone-600 hover:bg-stone-50"
+                    onClick={() => setNewsletterStatsMonth((newsletterStatsMonth + 1) % 12)}
+                  >
+                    Next
+                  </button>
+                </div>
+              </div>
+
+              <div className="space-y-4">
+                {newsletterStatsFields.map(field => (
+                  <div key={field.id} className="flex flex-col sm:flex-row gap-3">
+                    <div className="text-sm font-medium text-stone-900 sm:w-48 pt-2">
+                      {field.label}
+                    </div>
+                    <textarea
+                      value={newsletterStatsData[newsletterStatsMonth]?.[field.id] || ''}
+                      onChange={(e) => updateNewsletterStatsField(newsletterStatsMonth, field.id, e.target.value)}
+                      rows={2}
                       className="flex-1 px-4 py-2 border border-stone-200 rounded-md focus:ring-2 focus:ring-amber-400 focus:border-transparent bg-white text-sm"
                       placeholder={`Add ${field.label.toLowerCase()}...`}
                     />
