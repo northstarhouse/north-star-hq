@@ -2167,18 +2167,19 @@ const EventManagementApp = () => {
   const [newsletterData, setNewsletterData] = useState({});
   const [showNewsletterModal, setShowNewsletterModal] = useState(false);
   const [newsletterMonth, setNewsletterMonth] = useState(new Date().getMonth());
+  const [editingNewsletter, setEditingNewsletter] = useState(false);
   const [postingData, setPostingData] = useState({});
-  const [showPostingModal, setShowPostingModal] = useState(false);
   const [postingMonth, setPostingMonth] = useState(new Date().getMonth());
+  const [editingPosting, setEditingPosting] = useState(false);
   const [pressReleaseData, setPressReleaseData] = useState({});
-  const [showPressReleaseModal, setShowPressReleaseModal] = useState(false);
   const [pressReleaseMonth, setPressReleaseMonth] = useState(new Date().getMonth());
+  const [editingPressRelease, setEditingPressRelease] = useState(false);
   const [bookingsData, setBookingsData] = useState([]);
   const [bookingsCount, setBookingsCount] = useState(0);
   const [showBookingsModal, setShowBookingsModal] = useState(false);
   const [newsletterStatsData, setNewsletterStatsData] = useState({});
-  const [showNewsletterStatsModal, setShowNewsletterStatsModal] = useState(false);
   const [newsletterStatsMonth, setNewsletterStatsMonth] = useState(new Date().getMonth());
+  const [editingNewsletterStats, setEditingNewsletterStats] = useState(false);
   const SHEETS_API_URL = 'https://script.google.com/macros/s/AKfycbzcuMhZ1h15zP7IgYhyCBChgkx_mbe23G6756V2_lHNT1grfgKR-AuZxbHt3t806h8-/exec';
   const STORAGE_KEY = 'nsh-events-cache-v1';
   const FLYER_KEY = 'nsh-event-flyers-v1';
@@ -3790,11 +3791,7 @@ const EventManagementApp = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-stone-50 via-stone-100 to-amber-50 p-4 sm:p-6">
       <div className="max-w-6xl mx-auto">
-        <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between mb-8">
-          <div>
-            <h1 className="text-4xl font-light text-stone-900 mb-2">North Star House</h1>
-            <p className="text-stone-700">Event Management</p>
-          </div>
+        <div className="flex items-center justify-end mb-8">
           <button
             onClick={() => setShowNewEventForm(true)}
             className="flex items-center justify-center gap-2 px-6 py-3 bg-[#886c44] text-white rounded-md hover:bg-[#755a38] transition-all shadow-md w-full md:w-auto"
@@ -4075,119 +4072,185 @@ const EventManagementApp = () => {
           </div>
         )}
 
+        {/* Newsletter Content - Inline */}
         <div className="mt-10 bg-white rounded-lg border border-stone-200 shadow-sm p-6">
-          <div className="flex items-start justify-between gap-4 mb-2">
-            <div>
-              <h2 className="text-lg font-medium text-stone-900">Newsletter Content</h2>
-              <p className="text-xs text-stone-500">
-                Current focus: {monthLabels[previewMonthIndex]}
-              </p>
+          <div className="flex items-start justify-between gap-4 mb-4">
+            <h2 className="text-lg font-medium text-stone-900">Newsletter Content</h2>
+            <div className="flex items-center gap-3">
+              <button
+                type="button"
+                className={`px-3 py-1.5 rounded-md text-xs font-medium border inline-flex items-center gap-1.5 ${newsletterData[newsletterMonth]?.published ? 'border-emerald-200 text-emerald-700 bg-emerald-50' : 'border-stone-200 text-stone-600 hover:bg-stone-50'}`}
+                onClick={() => toggleNewsletterPublished(newsletterMonth)}
+              >
+                {newsletterData[newsletterMonth]?.published ? (<><CheckCircle2 size={14} /> Published</>) : 'Mark Published'}
+              </button>
+              <button
+                type="button"
+                className="text-xs text-amber-700 font-medium"
+                onClick={() => setEditingNewsletter(!editingNewsletter)}
+              >
+                {editingNewsletter ? 'Done' : 'Edit'}
+              </button>
             </div>
-            <button
-              type="button"
-              className="text-xs text-amber-700 font-medium"
-              onClick={() => setShowNewsletterModal(true)}
-            >
-              Open
-            </button>
           </div>
-          <div className="text-sm text-stone-700">
-            {previewEntry.mainFeature ||
-              previewEntry.mainUpcomingEvent ||
-              previewEntry.eventRecaps ||
-              previewEntry.volunteerHours ||
-              previewEntry.donationNeeds ||
-              previewEntry.other ||
-              'Add the monthly overview and details.'}
+          <div className="flex items-center gap-2 mb-4">
+            <button type="button" className="px-2 py-1 border border-stone-200 rounded text-xs text-stone-600 hover:bg-stone-50" onClick={() => setNewsletterMonth((newsletterMonth + 11) % 12)}>Prev</button>
+            <div className="text-sm font-medium text-stone-900">{monthLabels[newsletterMonth]}</div>
+            <button type="button" className="px-2 py-1 border border-stone-200 rounded text-xs text-stone-600 hover:bg-stone-50" onClick={() => setNewsletterMonth((newsletterMonth + 1) % 12)}>Next</button>
           </div>
-          <div className="mt-3 text-xs text-stone-500">
-            {currentNewsletter && currentNewsletter.published
-              ? `Published - previewing ${monthLabels[previewMonthIndex]}`
-              : `Draft - ${monthLabels[previewMonthIndex]}`}
+          <div className="space-y-3">
+            {newsletterFields.map(field => (
+              <div key={field.id}>
+                <div className="text-xs font-medium text-stone-500 mb-1">{field.label}</div>
+                {editingNewsletter ? (
+                  <textarea
+                    value={newsletterData[newsletterMonth]?.[field.id] || ''}
+                    onChange={(e) => updateNewsletterField(newsletterMonth, field.id, e.target.value)}
+                    rows={2}
+                    className="w-full px-3 py-2 border border-stone-200 rounded-md focus:ring-2 focus:ring-amber-400 focus:border-transparent bg-white text-sm"
+                    placeholder={`Add ${field.label.toLowerCase()}...`}
+                  />
+                ) : (
+                  <div className="text-sm text-stone-800">{newsletterData[newsletterMonth]?.[field.id] || <span className="text-stone-400">—</span>}</div>
+                )}
+              </div>
+            ))}
           </div>
         </div>
 
+        {/* Newsletter Stats - Inline */}
         <div className="mt-6 bg-white rounded-lg border border-stone-200 shadow-sm p-6">
-          <div className="flex items-start justify-between gap-4 mb-2">
-            <div>
-              <h2 className="text-lg font-medium text-stone-900">Newsletter Stats</h2>
-              <p className="text-xs text-stone-500">
-                Current focus: {monthLabels[newsletterStatsMonth]}
-              </p>
-            </div>
+          <div className="flex items-start justify-between gap-4 mb-4">
+            <h2 className="text-lg font-medium text-stone-900">Newsletter Stats</h2>
             <button
               type="button"
               className="text-xs text-amber-700 font-medium"
-              onClick={() => setShowNewsletterStatsModal(true)}
+              onClick={() => setEditingNewsletterStats(!editingNewsletterStats)}
             >
-              Open
+              {editingNewsletterStats ? 'Done' : 'Edit'}
             </button>
           </div>
-          <div className="text-sm text-stone-700">
-            {newsletterStatsData[newsletterStatsMonth]?.edition ||
-              newsletterStatsData[newsletterStatsMonth]?.feature ||
-              newsletterStatsData[newsletterStatsMonth]?.fundraisingBroughtIn ||
-              'Add newsletter stats for this month.'}
+          <div className="flex items-center gap-2 mb-4">
+            <button type="button" className="px-2 py-1 border border-stone-200 rounded text-xs text-stone-600 hover:bg-stone-50" onClick={() => setNewsletterStatsMonth((newsletterStatsMonth + 11) % 12)}>Prev</button>
+            <div className="text-sm font-medium text-stone-900">{monthLabels[newsletterStatsMonth]}</div>
+            <button type="button" className="px-2 py-1 border border-stone-200 rounded text-xs text-stone-600 hover:bg-stone-50" onClick={() => setNewsletterStatsMonth((newsletterStatsMonth + 1) % 12)}>Next</button>
+          </div>
+          <div className="space-y-3">
+            {newsletterStatsFields.map(field => (
+              <div key={field.id}>
+                <div className="text-xs font-medium text-stone-500 mb-1">{field.label}</div>
+                {editingNewsletterStats ? (
+                  <textarea
+                    value={newsletterStatsData[newsletterStatsMonth]?.[field.id] || ''}
+                    onChange={(e) => updateNewsletterStatsField(newsletterStatsMonth, field.id, e.target.value)}
+                    rows={2}
+                    className="w-full px-3 py-2 border border-stone-200 rounded-md focus:ring-2 focus:ring-amber-400 focus:border-transparent bg-white text-sm"
+                    placeholder={`Add ${field.label.toLowerCase()}...`}
+                  />
+                ) : (
+                  <div className="text-sm text-stone-800">{newsletterStatsData[newsletterStatsMonth]?.[field.id] || <span className="text-stone-400">—</span>}</div>
+                )}
+              </div>
+            ))}
           </div>
         </div>
 
+        {/* Press Releases - Inline */}
         <div className="mt-6 bg-white rounded-lg border border-stone-200 shadow-sm p-6">
-          <div className="flex items-start justify-between gap-4 mb-2">
-            <div>
-              <h2 className="text-lg font-medium text-stone-900">Press Releases</h2>
-              <p className="text-xs text-stone-500">
-                Goal: 1 per month - Current focus: {monthLabels[pressReleasePreviewMonthIndex]}
-              </p>
+          <div className="flex items-start justify-between gap-4 mb-4">
+            <h2 className="text-lg font-medium text-stone-900">Press Releases</h2>
+            <div className="flex items-center gap-3">
+              <button
+                type="button"
+                className={`px-3 py-1.5 rounded-md text-xs font-medium border inline-flex items-center gap-1.5 ${pressReleaseData[pressReleaseMonth]?.published ? 'border-emerald-200 text-emerald-700 bg-emerald-50' : 'border-stone-200 text-stone-600 hover:bg-stone-50'}`}
+                onClick={() => togglePressReleasePublished(pressReleaseMonth)}
+              >
+                {pressReleaseData[pressReleaseMonth]?.published ? (<><CheckCircle2 size={14} /> Sent</>) : 'Mark as Sent'}
+              </button>
+              <button
+                type="button"
+                className="text-xs text-amber-700 font-medium"
+                onClick={() => setEditingPressRelease(!editingPressRelease)}
+              >
+                {editingPressRelease ? 'Done' : 'Edit'}
+              </button>
             </div>
-            <button
-              type="button"
-              className="text-xs text-amber-700 font-medium"
-              onClick={() => setShowPressReleaseModal(true)}
-            >
-              Open
-            </button>
           </div>
-          <div className="text-sm text-stone-700">
-            {pressReleasePreviewEntry.headline ||
-              pressReleasePreviewEntry.summary ||
-              pressReleasePreviewEntry.keyDetails ||
-              pressReleasePreviewEntry.outlets ||
-              pressReleasePreviewEntry.link ||
-              pressReleasePreviewEntry.notes ||
-              'Outline the monthly press release.'}
+          <div className="flex items-center gap-2 mb-4">
+            <button type="button" className="px-2 py-1 border border-stone-200 rounded text-xs text-stone-600 hover:bg-stone-50" onClick={() => setPressReleaseMonth((pressReleaseMonth + 11) % 12)}>Prev</button>
+            <div className="text-sm font-medium text-stone-900">{monthLabels[pressReleaseMonth]}</div>
+            <button type="button" className="px-2 py-1 border border-stone-200 rounded text-xs text-stone-600 hover:bg-stone-50" onClick={() => setPressReleaseMonth((pressReleaseMonth + 1) % 12)}>Next</button>
           </div>
-          <div className="mt-3 text-xs text-stone-500">
-            {currentPressRelease && currentPressRelease.published
-              ? `Sent - previewing ${monthLabels[pressReleasePreviewMonthIndex]}`
-              : `Draft - ${monthLabels[pressReleasePreviewMonthIndex]}`}
+          <div className="space-y-3">
+            {pressReleaseFields.map(field => (
+              <div key={field.id}>
+                <div className="text-xs font-medium text-stone-500 mb-1">{field.label}</div>
+                {editingPressRelease ? (
+                  <textarea
+                    value={pressReleaseData[pressReleaseMonth]?.[field.id] || ''}
+                    onChange={(e) => updatePressReleaseField(pressReleaseMonth, field.id, e.target.value)}
+                    rows={2}
+                    className="w-full px-3 py-2 border border-stone-200 rounded-md focus:ring-2 focus:ring-amber-400 focus:border-transparent bg-white text-sm"
+                    placeholder={`Add ${field.label.toLowerCase()}...`}
+                  />
+                ) : (
+                  <div className="text-sm text-stone-800">{pressReleaseData[pressReleaseMonth]?.[field.id] || <span className="text-stone-400">—</span>}</div>
+                )}
+              </div>
+            ))}
           </div>
         </div>
 
+        {/* Monthly Posting Schedule - Inline */}
         <div className="mt-6 bg-white rounded-lg border border-stone-200 shadow-sm p-6">
-          <div className="flex items-start justify-between gap-4 mb-2">
-            <div>
-              <h2 className="text-lg font-medium text-stone-900">Monthly Posting Schedule</h2>
-              <p className="text-xs text-stone-500">
-                Current focus: {monthLabels[postingPreviewMonthIndex]}
-              </p>
+          <div className="flex items-start justify-between gap-4 mb-4">
+            <h2 className="text-lg font-medium text-stone-900">Monthly Posting Schedule</h2>
+            <div className="flex items-center gap-3">
+              <button
+                type="button"
+                className={`px-3 py-1.5 rounded-md text-xs font-medium border inline-flex items-center gap-1.5 ${postingData[postingMonth]?.completed ? 'border-emerald-200 text-emerald-700 bg-emerald-50' : 'border-stone-200 text-stone-600 hover:bg-stone-50'}`}
+                onClick={() => togglePostingComplete(postingMonth)}
+              >
+                {postingData[postingMonth]?.completed ? (<><CheckCircle2 size={14} /> Completed</>) : 'Mark Complete'}
+              </button>
+              <button
+                type="button"
+                className="text-xs text-amber-700 font-medium"
+                onClick={() => setEditingPosting(!editingPosting)}
+              >
+                {editingPosting ? 'Done' : 'Edit'}
+              </button>
             </div>
-            <button
-              type="button"
-              className="text-xs text-amber-700 font-medium"
-              onClick={() => setShowPostingModal(true)}
-            >
-              Open
-            </button>
           </div>
-          <div className="text-sm text-stone-700">
-            {postingPreviewCount > 0
-              ? `${postingPreviewCount}/${postingFields.length} prompts filled.`
-              : 'Add what you posted this month.'}
+          <div className="flex items-center gap-2 mb-4">
+            <button type="button" className="px-2 py-1 border border-stone-200 rounded text-xs text-stone-600 hover:bg-stone-50" onClick={() => setPostingMonth((postingMonth + 11) % 12)}>Prev</button>
+            <div className="text-sm font-medium text-stone-900">{monthLabels[postingMonth]}</div>
+            <button type="button" className="px-2 py-1 border border-stone-200 rounded text-xs text-stone-600 hover:bg-stone-50" onClick={() => setPostingMonth((postingMonth + 1) % 12)}>Next</button>
           </div>
-          <div className="mt-3 text-xs text-stone-500">
-            {currentPosting && currentPosting.completed
-              ? `Completed - previewing ${monthLabels[postingPreviewMonthIndex]}`
-              : `In progress - ${monthLabels[postingPreviewMonthIndex]}`}
+          <div className="space-y-5">
+            {postingSchedule.map((section, weekIndex) => (
+              <div key={section.week}>
+                <div className="text-xs font-semibold text-stone-600 uppercase tracking-wide mb-2">{section.week}</div>
+                <div className="space-y-2">
+                  {section.items.map(item => (
+                    <div key={item.id}>
+                      <div className="text-xs font-medium text-stone-500 mb-1">{item.day} — {item.prompt}</div>
+                      {editingPosting ? (
+                        <textarea
+                          value={postingData[postingMonth]?.entries?.[item.id] || ''}
+                          onChange={(e) => updatePostingEntry(postingMonth, item.id, e.target.value)}
+                          rows={1}
+                          className="w-full px-3 py-1.5 border border-stone-200 rounded-md focus:ring-2 focus:ring-amber-400 focus:border-transparent bg-white text-sm"
+                          placeholder="What was posted..."
+                        />
+                      ) : (
+                        <div className="text-sm text-stone-800">{postingData[postingMonth]?.entries?.[item.id] || <span className="text-stone-400">—</span>}</div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ))}
           </div>
         </div>
 
@@ -4268,221 +4331,6 @@ const EventManagementApp = () => {
         </div>
       )}
 
-      {showNewsletterStatsModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-lg shadow-xl max-w-3xl w-full max-h-[90vh] overflow-y-auto border border-stone-200">
-            <div className="p-6 border-b border-stone-200 flex items-center justify-between">
-              <div>
-                <h2 className="text-xl font-light text-stone-900">Newsletter Stats</h2>
-                <p className="text-xs text-stone-500">Track month-by-month newsletter performance.</p>
-              </div>
-              <button
-                type="button"
-                className="text-sm text-stone-600 hover:text-stone-800"
-                onClick={() => setShowNewsletterStatsModal(false)}
-              >
-                Close
-              </button>
-            </div>
-
-            <div className="p-6 space-y-6">
-              <div className="flex flex-wrap items-center justify-between gap-3">
-                <div className="flex items-center gap-2">
-                  <button
-                    type="button"
-                    className="px-3 py-2 border border-stone-200 rounded-md text-sm text-stone-600 hover:bg-stone-50"
-                    onClick={() => setNewsletterStatsMonth((newsletterStatsMonth + 11) % 12)}
-                  >
-                    Prev
-                  </button>
-                  <div className="text-sm font-medium text-stone-900">
-                    {monthLabels[newsletterStatsMonth]}
-                  </div>
-                  <button
-                    type="button"
-                    className="px-3 py-2 border border-stone-200 rounded-md text-sm text-stone-600 hover:bg-stone-50"
-                    onClick={() => setNewsletterStatsMonth((newsletterStatsMonth + 1) % 12)}
-                  >
-                    Next
-                  </button>
-                </div>
-              </div>
-
-              <div className="space-y-4">
-                {newsletterStatsFields.map(field => (
-                  <div key={field.id} className="flex flex-col sm:flex-row gap-3">
-                    <div className="text-sm font-medium text-stone-900 sm:w-48 pt-2">
-                      {field.label}
-                    </div>
-                    <textarea
-                      value={newsletterStatsData[newsletterStatsMonth]?.[field.id] || ''}
-                      onChange={(e) => updateNewsletterStatsField(newsletterStatsMonth, field.id, e.target.value)}
-                      rows={2}
-                      className="flex-1 px-4 py-2 border border-stone-200 rounded-md focus:ring-2 focus:ring-amber-400 focus:border-transparent bg-white text-sm"
-                      placeholder={`Add ${field.label.toLowerCase()}...`}
-                    />
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {showPressReleaseModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-lg shadow-xl max-w-3xl w-full max-h-[90vh] overflow-y-auto border border-stone-200">
-            <div className="p-6 border-b border-stone-200 flex items-center justify-between">
-              <div>
-                <h2 className="text-xl font-light text-stone-900">Press Releases</h2>
-                <p className="text-xs text-stone-500">Plan month-by-month press releases.</p>
-              </div>
-              <button
-                type="button"
-                className="text-sm text-stone-600 hover:text-stone-800"
-                onClick={() => setShowPressReleaseModal(false)}
-              >
-                Close
-              </button>
-            </div>
-
-            <div className="p-6 space-y-6">
-              <div className="flex flex-wrap items-center justify-between gap-3">
-                <div className="flex items-center gap-2">
-                  <button
-                    type="button"
-                    className="px-3 py-2 border border-stone-200 rounded-md text-sm text-stone-600 hover:bg-stone-50"
-                    onClick={() => setPressReleaseMonth((pressReleaseMonth + 11) % 12)}
-                  >
-                    Prev
-                  </button>
-                  <div className="text-sm font-medium text-stone-900">
-                    {monthLabels[pressReleaseMonth]}
-                  </div>
-                  <button
-                    type="button"
-                    className="px-3 py-2 border border-stone-200 rounded-md text-sm text-stone-600 hover:bg-stone-50"
-                    onClick={() => setPressReleaseMonth((pressReleaseMonth + 1) % 12)}
-                  >
-                    Next
-                  </button>
-                </div>
-                <button
-                  type="button"
-                  className={`px-3 py-2 rounded-md text-sm font-medium border inline-flex items-center gap-2 ${pressReleaseData[pressReleaseMonth]?.published ? 'border-emerald-200 text-emerald-700 bg-emerald-50' : 'border-stone-200 text-stone-600 hover:bg-stone-50'}`}
-                  onClick={() => togglePressReleasePublished(pressReleaseMonth)}
-                >
-                  {pressReleaseData[pressReleaseMonth]?.published ? (
-                    <>
-                      <CheckCircle2 size={16} />
-                      Sent
-                    </>
-                  ) : (
-                    'Mark as Sent'
-                  )}
-                </button>
-              </div>
-
-              <div className="space-y-4">
-                {pressReleaseFields.map(field => (
-                  <div key={field.id} className="flex flex-col sm:flex-row gap-3">
-                    <div className="text-sm font-medium text-stone-900 sm:w-48 pt-2">
-                      {field.label}
-                    </div>
-                    <textarea
-                      value={pressReleaseData[pressReleaseMonth]?.[field.id] || ''}
-                      onChange={(e) => updatePressReleaseField(pressReleaseMonth, field.id, e.target.value)}
-                      rows={3}
-                      className="flex-1 px-4 py-2 border border-stone-200 rounded-md focus:ring-2 focus:ring-amber-400 focus:border-transparent bg-white text-sm"
-                      placeholder={`Add ${field.label.toLowerCase()}...`}
-                    />
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {showPostingModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto border border-stone-200">
-            <div className="p-6 border-b border-stone-200 flex items-center justify-between">
-              <div>
-                <h2 className="text-xl font-light text-stone-900">Monthly Posting Schedule</h2>
-                <p className="text-xs text-stone-500">Track what you actually posted each week.</p>
-              </div>
-              <button
-                type="button"
-                className="text-sm text-stone-600 hover:text-stone-800"
-                onClick={() => setShowPostingModal(false)}
-              >
-                Close
-              </button>
-            </div>
-
-            <div className="p-6 space-y-6">
-              <div className="flex flex-wrap items-center justify-between gap-3">
-                <div className="flex items-center gap-2">
-                  <button
-                    type="button"
-                    className="px-3 py-2 border border-stone-200 rounded-md text-sm text-stone-600 hover:bg-stone-50"
-                    onClick={() => setPostingMonth((postingMonth + 11) % 12)}
-                  >
-                    Prev
-                  </button>
-                  <div className="text-sm font-medium text-stone-900">
-                    {monthLabels[postingMonth]}
-                  </div>
-                  <button
-                    type="button"
-                    className="px-3 py-2 border border-stone-200 rounded-md text-sm text-stone-600 hover:bg-stone-50"
-                    onClick={() => setPostingMonth((postingMonth + 1) % 12)}
-                  >
-                    Next
-                  </button>
-                </div>
-                <button
-                  type="button"
-                  className={`px-3 py-2 rounded-md text-sm font-medium border inline-flex items-center gap-2 ${postingData[postingMonth]?.completed ? 'border-emerald-200 text-emerald-700 bg-emerald-50' : 'border-stone-200 text-stone-600 hover:bg-stone-50'}`}
-                  onClick={() => togglePostingComplete(postingMonth)}
-                >
-                  {postingData[postingMonth]?.completed ? (
-                    <>
-                      <CheckCircle2 size={16} />
-                      Completed
-                    </>
-                  ) : (
-                    'Mark as Complete'
-                  )}
-                </button>
-              </div>
-
-              {postingSchedule.map(section => (
-                <div key={section.week} className="space-y-4">
-                  <h3 className="text-sm font-semibold text-stone-900">{section.week}</h3>
-                  <div className="space-y-3">
-                    {section.items.map(item => (
-                      <div key={item.id} className="flex flex-col gap-2 rounded-md border border-stone-200 p-3">
-                        <div className="text-sm font-medium text-stone-800">
-                          {item.day} - {item.prompt}
-                        </div>
-                        <textarea
-                          value={postingData[postingMonth]?.entries?.[item.id] || ''}
-                          onChange={(e) => updatePostingEntry(postingMonth, item.id, e.target.value)}
-                          rows={2}
-                          className="w-full px-4 py-2 border border-stone-200 rounded-md focus:ring-2 focus:ring-amber-400 focus:border-transparent bg-white text-sm"
-                          placeholder="What you posted or did..."
-                        />
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      )}
 
       {showBookingsModal && (
         <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center p-4 z-50">
