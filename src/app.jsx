@@ -9,6 +9,7 @@ const SNAPSHOTS_CACHE_KEY = 'nsh-strategy-sections-cache-v1';
 const QUARTERLY_CACHE_KEY = 'nsh-strategy-quarterly-cache-v1';
 const MAJOR_TODOS_CACHE_KEY = 'nsh-strategy-major-todos-v1';
 const WISH_LIST_CACHE_KEY = 'nsh-strategy-wish-list-v1';
+const PENDING_ACK_CACHE_KEY = 'nsh-strategy-pending-ack-v1';
 
 // ============================================================================
 // GOOGLE SHEETS CONFIGURATION
@@ -204,6 +205,19 @@ const SheetsAPI = {
       return data.items || [];
     } catch (error) {
       console.error('Error fetching wish list:', error);
+      return [];
+    }
+  },
+
+  fetchPendingAcknowledgements: async () => {
+    if (!SheetsAPI.isConfigured()) return [];
+    try {
+      const response = await fetch(`${GOOGLE_SCRIPT_URL}?action=getPendingAcknowledgements`);
+      if (!response.ok) throw new Error('Failed to fetch pending acknowledgements');
+      const data = await response.json();
+      return data.donors || [];
+    } catch (error) {
+      console.error('Error fetching pending acknowledgements:', error);
       return [];
     }
   },
@@ -4438,6 +4452,7 @@ const DashboardView = ({
   metrics,
   majorTodos,
   wishListItems,
+  pendingAcknowledgements,
   onAddTodo,
   onToggleTodo,
   onDeleteTodo,
@@ -4587,48 +4602,73 @@ const DashboardView = ({
                 <path strokeLinecap="round" strokeLinejoin="round" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
               </svg>
               <span className="text-sm uppercase tracking-[0.2em] font-semibold text-gold">Cosmic Inbox</span>
-              {wishListItems.length > 0 && (
-                <span className="ml-auto text-[10px] text-stone-400">{wishListItems.length} item{wishListItems.length !== 1 ? 's' : ''}</span>
+              {(wishListItems.length + pendingAcknowledgements.length) > 0 && (
+                <span className="ml-auto text-[10px] text-stone-400">{wishListItems.length + pendingAcknowledgements.length} item{(wishListItems.length + pendingAcknowledgements.length) !== 1 ? 's' : ''}</span>
               )}
             </div>
-            {wishListItems.length === 0 ? (
-              <p className="text-stone-400 text-sm text-center py-3">No wish list items yet.</p>
-            ) : (
-              <div className="space-y-2 max-h-[260px] overflow-y-auto pr-1">
-                {wishListItems.map((item, idx) => (
-                  <div key={idx} className="bg-white rounded-xl border border-stone-100 px-4 py-3 hover:border-gold/30 transition">
-                    <div className="flex items-start gap-2">
-                      <div className="flex-1 min-w-0">
-                        {item.link ? (
-                          <a
-                            href={item.link}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="text-sm font-medium text-ink hover:text-gold transition truncate block"
-                          >
-                            {item.item}
-                          </a>
-                        ) : (
-                          <span className="text-sm font-medium text-ink truncate block">{item.item}</span>
-                        )}
-                        <div className="flex flex-wrap items-center gap-x-3 gap-y-0.5 mt-1">
-                          {item.areaSupported && (
-                            <span className="text-[10px] uppercase tracking-wide text-gold/80 font-semibold">{item.areaSupported}</span>
+
+            {/* Thank You Notes */}
+            {pendingAcknowledgements.length > 0 && (
+              <div className="mb-3">
+                <p className="text-[10px] uppercase tracking-wide text-stone-400 mb-2">Thank You Notes Needed</p>
+                <div className="space-y-1.5">
+                  {pendingAcknowledgements.map((donor, idx) => (
+                    <div key={idx} className="flex items-center gap-2.5 bg-amber-50/60 rounded-xl border border-amber-200/60 px-4 py-2.5">
+                      <svg className="w-3.5 h-3.5 text-clay flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                      </svg>
+                      <span className="text-sm text-ink font-medium flex-1 truncate">{donor.name}</span>
+                      <span className="text-[10px] text-clay/80 font-medium uppercase tracking-wide flex-shrink-0">Send note</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Wish List */}
+            {wishListItems.length === 0 && pendingAcknowledgements.length === 0 ? (
+              <p className="text-stone-400 text-sm text-center py-3">Nothing in the inbox yet.</p>
+            ) : wishListItems.length > 0 && (
+              <div>
+                {pendingAcknowledgements.length > 0 && (
+                  <p className="text-[10px] uppercase tracking-wide text-stone-400 mb-2">Wish List</p>
+                )}
+                <div className="space-y-2 max-h-[200px] overflow-y-auto pr-1">
+                  {wishListItems.map((item, idx) => (
+                    <div key={idx} className="bg-white rounded-xl border border-stone-100 px-4 py-3 hover:border-gold/30 transition">
+                      <div className="flex items-start gap-2">
+                        <div className="flex-1 min-w-0">
+                          {item.link ? (
+                            <a
+                              href={item.link}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-sm font-medium text-ink hover:text-gold transition truncate block"
+                            >
+                              {item.item}
+                            </a>
+                          ) : (
+                            <span className="text-sm font-medium text-ink truncate block">{item.item}</span>
                           )}
-                          {item.estimatedCost && (
-                            <span className="text-[10px] text-stone-400">{item.estimatedCost}</span>
-                          )}
-                          {item.quantity && (
-                            <span className="text-[10px] text-stone-400">Qty: {item.quantity}</span>
+                          <div className="flex flex-wrap items-center gap-x-3 gap-y-0.5 mt-1">
+                            {item.areaSupported && (
+                              <span className="text-[10px] uppercase tracking-wide text-gold/80 font-semibold">{item.areaSupported}</span>
+                            )}
+                            {item.estimatedCost && (
+                              <span className="text-[10px] text-stone-400">{item.estimatedCost}</span>
+                            )}
+                            {item.quantity && (
+                              <span className="text-[10px] text-stone-400">Qty: {item.quantity}</span>
+                            )}
+                          </div>
+                          {item.notes && (
+                            <p className="text-[11px] text-stone-400 mt-1 line-clamp-2">{item.notes}</p>
                           )}
                         </div>
-                        {item.notes && (
-                          <p className="text-[11px] text-stone-400 mt-1 line-clamp-2">{item.notes}</p>
-                        )}
                       </div>
                     </div>
-                  </div>
-                ))}
+                  ))}
+                </div>
               </div>
             )}
           </div>
@@ -4963,6 +5003,9 @@ const StrategyApp = () => {
   const [wishListItems, setWishListItems] = useState(() => {
     return readSimpleCache(WISH_LIST_CACHE_KEY) || [];
   });
+  const [pendingAcknowledgements, setPendingAcknowledgements] = useState(() => {
+    return readSimpleCache(PENDING_ACK_CACHE_KEY) || [];
+  });
   const [quarterlyUpdates, setQuarterlyUpdates] = useState([]);
   const [quarterlyDraft, setQuarterlyDraft] = useState(null);
   const [inlineQuarterEdit, setInlineQuarterEdit] = useState(null);
@@ -5097,10 +5140,11 @@ const StrategyApp = () => {
         SheetsAPI.fetchMetrics(),
         SheetsAPI.fetchSectionSnapshots(),
         SheetsAPI.fetchMajorTodos(),
-        SheetsAPI.fetchWishList()
+        SheetsAPI.fetchWishList(),
+        SheetsAPI.fetchPendingAcknowledgements()
       ]);
 
-      const [metricsResult, snapshotResult, todosResult, wishListResult] = results;
+      const [metricsResult, snapshotResult, todosResult, wishListResult, pendingAckResult] = results;
       if (metricsResult.status === 'fulfilled' && metricsResult.value) {
         setMetrics(metricsResult.value);
         writeSimpleCache(METRICS_CACHE_KEY, metricsResult.value);
@@ -5112,6 +5156,10 @@ const StrategyApp = () => {
       if (wishListResult.status === 'fulfilled' && wishListResult.value) {
         setWishListItems(wishListResult.value);
         writeSimpleCache(WISH_LIST_CACHE_KEY, wishListResult.value);
+      }
+      if (pendingAckResult.status === 'fulfilled' && pendingAckResult.value) {
+        setPendingAcknowledgements(pendingAckResult.value);
+        writeSimpleCache(PENDING_ACK_CACHE_KEY, pendingAckResult.value);
       }
       if (todosResult.status === 'fulfilled' && todosResult.value?.length) {
         // Merge server todos with local state: skip locally deleted items,
@@ -5337,6 +5385,7 @@ const StrategyApp = () => {
                 metrics={metrics}
                 majorTodos={majorTodos}
                 wishListItems={wishListItems}
+                pendingAcknowledgements={pendingAcknowledgements}
                 onAddTodo={handleAddTodo}
                 onToggleTodo={handleToggleTodo}
                 onDeleteTodo={handleDeleteTodo}

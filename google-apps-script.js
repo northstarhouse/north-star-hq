@@ -522,6 +522,26 @@ function deleteMajorTodo(id) {
   return { deleted: true };
 }
 
+function getPendingAcknowledgements() {
+  try {
+    const ss = SpreadsheetApp.openById(DONATIONS_SHEET_ID);
+    const sheet = ss.getSheetByName(DONATIONS_SHEET_NAME);
+    if (!sheet) return [];
+    const lastRow = sheet.getLastRow();
+    if (lastRow < 2) return [];
+    const data = sheet.getRange(2, 1, lastRow - 1, 9).getValues();
+    return data
+      .filter((row) => {
+        const name = String(row[0] || '').trim();
+        const acknowledged = row[8];
+        return name && acknowledged !== true && acknowledged !== 'true' && acknowledged !== 'TRUE';
+      })
+      .map((row) => ({ name: String(row[0]).trim() }));
+  } catch (err) {
+    return [];
+  }
+}
+
 function getWishList() {
   try {
     const ss = SpreadsheetApp.openById(WISH_LIST_SHEET_ID);
@@ -827,6 +847,12 @@ function doGet(e) {
       const items = getWishList();
       return ContentService
         .createTextOutput(JSON.stringify({ success: true, items: items }))
+        .setMimeType(ContentService.MimeType.JSON);
+    }
+    if (action === 'getPendingAcknowledgements') {
+      const donors = getPendingAcknowledgements();
+      return ContentService
+        .createTextOutput(JSON.stringify({ success: true, donors: donors }))
         .setMimeType(ContentService.MimeType.JSON);
     }
     if (action === 'getSheetLastUpdated') {
