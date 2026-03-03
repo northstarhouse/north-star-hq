@@ -4661,6 +4661,8 @@ const DashboardView = ({
               <a
                 key={item.label}
                 href={metricLinks[item.label]}
+                target="_blank"
+                rel="noopener noreferrer"
                 className="bg-white rounded-2xl p-4 border border-stone-100 card-shadow block transition hover:-translate-y-0.5 hover:shadow-lg focus:outline-none focus-visible:ring-2 focus-visible:ring-gold/60 relative"
                 aria-label={`${item.label} details`}
               >
@@ -4707,6 +4709,8 @@ const DashboardView = ({
             </button>
             <a
               href="https://northstarhouse.github.io/nsh-events-committee/"
+              target="_blank"
+              rel="noopener noreferrer"
               className="inline-flex items-center gap-1.5 rounded-lg border border-stone-200 bg-white/60 px-3 py-1.5 text-xs font-medium text-ink/80 transition hover:border-gold/40 hover:bg-white hover:text-ink"
             >
               <svg className="w-3 h-3 text-gold/70 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
@@ -4714,6 +4718,8 @@ const DashboardView = ({
             </a>
             <a
               href="https://northstarhouse.github.io/north-star-archives/"
+              target="_blank"
+              rel="noopener noreferrer"
               className="inline-flex items-center gap-1.5 rounded-lg border border-stone-200 bg-white/60 px-3 py-1.5 text-xs font-medium text-ink/80 transition hover:border-gold/40 hover:bg-white hover:text-ink"
             >
               <svg className="w-3 h-3 text-gold/70 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M7 17L17 7M17 7H7M17 7v10" /></svg>
