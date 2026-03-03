@@ -4740,6 +4740,15 @@ const DashboardView = ({
               <svg className="w-3 h-3 text-gold/70 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M7 17L17 7M17 7H7M17 7v10" /></svg>
               Archives
             </a>
+            <a
+              href="https://northstarhouse.github.io/northstar-kiosk/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1.5 rounded-lg border border-stone-200 bg-white/60 px-3 py-1.5 text-xs font-medium text-ink/80 transition hover:border-gold/40 hover:bg-white hover:text-ink"
+            >
+              <svg className="w-3 h-3 text-gold/70 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><rect x="2" y="3" width="20" height="14" rx="2" /><path strokeLinecap="round" strokeLinejoin="round" d="M8 21h8M12 17v4" /></svg>
+              Kiosk
+            </a>
           </div>
         </div>
       </div>
