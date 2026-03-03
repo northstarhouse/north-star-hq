@@ -4441,6 +4441,7 @@ const DashboardView = ({
   onAddTodo,
   onToggleTodo,
   onDeleteTodo,
+  onPriorityTodo,
   onOpenHoneybook,
   onOpenVoicemails,
   unreadHoneybook,
@@ -4460,7 +4461,7 @@ const DashboardView = ({
     if (e.key === 'Enter') handleAddTodo();
   };
 
-  const pendingTodos = majorTodos.filter((t) => !t.done);
+  const pendingTodos = majorTodos.filter((t) => !t.done).sort((a, b) => (b.priority ? 1 : 0) - (a.priority ? 1 : 0));
   const completedTodos = majorTodos.filter((t) => t.done);
 
   const metricLinks = {
@@ -4509,13 +4510,22 @@ const DashboardView = ({
               <p className="text-stone-400 text-sm text-center py-4">No items yet. Add your first major focus above.</p>
             )}
             {pendingTodos.map((todo) => (
-              <div key={todo.id} className="flex items-center gap-3 group bg-white rounded-xl border border-stone-100 px-4 py-3 transition hover:border-gold/30">
+              <div key={todo.id} className={`flex items-center gap-3 group bg-white rounded-xl border px-4 py-3 transition hover:border-gold/30 ${todo.priority ? 'border-gold/50 bg-amber-50/40' : 'border-stone-100'}`}>
                 <button
                   onClick={() => onToggleTodo(todo.id)}
                   className="w-5 h-5 rounded-md border-2 border-stone-300 flex-shrink-0 transition hover:border-gold flex items-center justify-center"
                   aria-label="Mark complete"
                 />
                 <span className="text-sm text-ink flex-1">{todo.text}</span>
+                <button
+                  onClick={() => onPriorityTodo(todo.id)}
+                  className={`flex-shrink-0 transition ${todo.priority ? 'text-gold' : 'opacity-0 group-hover:opacity-60 text-stone-300 hover:text-gold'}`}
+                  aria-label={todo.priority ? 'Remove priority' : 'Mark as priority'}
+                >
+                  <svg className="w-4 h-4" viewBox="0 0 24 24" fill={todo.priority ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth={1.8}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
+                  </svg>
+                </button>
                 <button
                   onClick={() => onDeleteTodo(todo.id)}
                   className="opacity-0 group-hover:opacity-60 hover:!opacity-100 text-stone-400 hover:text-red-500 transition flex-shrink-0"
@@ -4979,8 +4989,8 @@ const StrategyApp = () => {
   };
 
   const handleAddTodo = (text) => {
-    const todo = { id: makeId(), text, done: false, createdAt: new Date().toISOString(), completedAt: '' };
-    const next = [...majorTodos, todo];
+    const todo = { id: makeId(), text, done: false, priority: false, createdAt: new Date().toISOString(), completedAt: '' };
+    const next = [todo, ...majorTodos];
     saveMajorTodos(next);
     SheetsAPI.saveMajorTodo(todo);
   };
@@ -4989,6 +4999,16 @@ const StrategyApp = () => {
     const next = majorTodos.map((t) => {
       if (t.id !== id) return t;
       const updated = { ...t, done: !t.done, completedAt: !t.done ? new Date().toISOString() : '' };
+      SheetsAPI.saveMajorTodo(updated);
+      return updated;
+    });
+    saveMajorTodos(next);
+  };
+
+  const handlePriorityTodo = (id) => {
+    const next = majorTodos.map((t) => {
+      if (t.id !== id) return t;
+      const updated = { ...t, priority: !t.priority };
       SheetsAPI.saveMajorTodo(updated);
       return updated;
     });
@@ -5320,6 +5340,7 @@ const StrategyApp = () => {
                 onAddTodo={handleAddTodo}
                 onToggleTodo={handleToggleTodo}
                 onDeleteTodo={handleDeleteTodo}
+                onPriorityTodo={handlePriorityTodo}
                 onOpenHoneybook={() => {
                   markSheetSeen('honeybook', sheetLastUpdated.honeybook);
                   setView('honeybook');

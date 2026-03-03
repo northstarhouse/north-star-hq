@@ -70,7 +70,7 @@ const VISION_HEADERS = [
 ];
 const MAJOR_TODOS_SHEET_ID = '1Ylg3LAhhs1tEoVU9qRzhAK19mxKMRNhQjp8-a8dFW1Q';
 const MAJOR_TODOS_SHEET_NAME = 'Major Todos';
-const MAJOR_TODOS_HEADERS = ['id', 'text', 'done', 'createdAt', 'completedAt'];
+const MAJOR_TODOS_HEADERS = ['id', 'text', 'done', 'priority', 'createdAt', 'completedAt'];
 
 const WISH_LIST_SHEET_ID = '1MMhfOlupYVbYatvp3wr668_PPvh7Js8MA5aPdfEpCN8';
 const WISH_LIST_SHEET_NAME = 'Wish List';
@@ -484,6 +484,7 @@ function getMajorTodos() {
       const obj = {};
       headers.forEach((h, i) => { obj[h] = row[i]; });
       obj.done = obj.done === true || obj.done === 'true';
+      obj.priority = obj.priority === true || obj.priority === 'true';
       return obj;
     })
     .filter((todo) => todo.id && todo.text);
@@ -502,6 +503,7 @@ function saveMajorTodo(todo) {
     id,
     todo.text || '',
     todo.done === true || todo.done === 'true' ? 'true' : 'false',
+    todo.priority === true || todo.priority === 'true' ? 'true' : 'false',
     todo.createdAt || new Date().toISOString(),
     todo.completedAt || ''
   ];
