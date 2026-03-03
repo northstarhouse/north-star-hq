@@ -8,6 +8,7 @@ const METRICS_CACHE_KEY = 'nsh-strategy-metrics-cache-v1';
 const SNAPSHOTS_CACHE_KEY = 'nsh-strategy-sections-cache-v1';
 const QUARTERLY_CACHE_KEY = 'nsh-strategy-quarterly-cache-v1';
 const MAJOR_TODOS_CACHE_KEY = 'nsh-strategy-major-todos-v1';
+const WISH_LIST_CACHE_KEY = 'nsh-strategy-wish-list-v1';
 
 // ============================================================================
 // GOOGLE SHEETS CONFIGURATION
@@ -190,6 +191,19 @@ const SheetsAPI = {
       return data.todos || [];
     } catch (error) {
       console.error('Error fetching major todos:', error);
+      return [];
+    }
+  },
+
+  fetchWishList: async () => {
+    if (!SheetsAPI.isConfigured()) return [];
+    try {
+      const response = await fetch(`${GOOGLE_SCRIPT_URL}?action=getWishList`);
+      if (!response.ok) throw new Error('Failed to fetch wish list');
+      const data = await response.json();
+      return data.items || [];
+    } catch (error) {
+      console.error('Error fetching wish list:', error);
       return [];
     }
   },
@@ -4423,6 +4437,7 @@ export default EventManagementApp;
 const DashboardView = ({
   metrics,
   majorTodos,
+  wishListItems,
   onAddTodo,
   onToggleTodo,
   onDeleteTodo,
@@ -4432,6 +4447,7 @@ const DashboardView = ({
   unreadVoicemails
 }) => {
   const [newTodoText, setNewTodoText] = useState('');
+  const [showCompleted, setShowCompleted] = useState(false);
 
   const handleAddTodo = () => {
     const text = newTodoText.trim();
@@ -4511,8 +4527,20 @@ const DashboardView = ({
             ))}
             {completedTodos.length > 0 && (
               <div className="pt-2 border-t border-stone-100 mt-3">
-                <p className="text-[10px] uppercase tracking-wide text-stone-400 mb-2">Completed</p>
-                {completedTodos.map((todo) => (
+                <button
+                  onClick={() => setShowCompleted((v) => !v)}
+                  className="flex items-center gap-1.5 text-[10px] uppercase tracking-wide text-stone-400 hover:text-stone-600 transition mb-1 w-full text-left"
+                >
+                  <svg
+                    className="w-3 h-3 flex-shrink-0 transition-transform"
+                    style={{ transform: showCompleted ? 'rotate(90deg)' : 'rotate(0deg)' }}
+                    fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}
+                  >
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+                  </svg>
+                  {completedTodos.length} completed
+                </button>
+                {showCompleted && completedTodos.map((todo) => (
                   <div key={todo.id} className="flex items-center gap-3 group rounded-xl px-4 py-2.5 transition">
                     <button
                       onClick={() => onToggleTodo(todo.id)}
@@ -4536,6 +4564,59 @@ const DashboardView = ({
                     >
                       <IconTrash size={14} />
                     </button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Cosmic Inbox */}
+          <div className="mt-5 pt-5 border-t border-stone-100">
+            <div className="flex items-center gap-2 mb-3">
+              <svg className="w-4 h-4 text-gold flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
+              </svg>
+              <span className="text-sm uppercase tracking-[0.2em] font-semibold text-gold">Cosmic Inbox</span>
+              {wishListItems.length > 0 && (
+                <span className="ml-auto text-[10px] text-stone-400">{wishListItems.length} item{wishListItems.length !== 1 ? 's' : ''}</span>
+              )}
+            </div>
+            {wishListItems.length === 0 ? (
+              <p className="text-stone-400 text-sm text-center py-3">No wish list items yet.</p>
+            ) : (
+              <div className="space-y-2 max-h-[260px] overflow-y-auto pr-1">
+                {wishListItems.map((item, idx) => (
+                  <div key={idx} className="bg-white rounded-xl border border-stone-100 px-4 py-3 hover:border-gold/30 transition">
+                    <div className="flex items-start gap-2">
+                      <div className="flex-1 min-w-0">
+                        {item.link ? (
+                          <a
+                            href={item.link}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-sm font-medium text-ink hover:text-gold transition truncate block"
+                          >
+                            {item.item}
+                          </a>
+                        ) : (
+                          <span className="text-sm font-medium text-ink truncate block">{item.item}</span>
+                        )}
+                        <div className="flex flex-wrap items-center gap-x-3 gap-y-0.5 mt-1">
+                          {item.areaSupported && (
+                            <span className="text-[10px] uppercase tracking-wide text-gold/80 font-semibold">{item.areaSupported}</span>
+                          )}
+                          {item.estimatedCost && (
+                            <span className="text-[10px] text-stone-400">{item.estimatedCost}</span>
+                          )}
+                          {item.quantity && (
+                            <span className="text-[10px] text-stone-400">Qty: {item.quantity}</span>
+                          )}
+                        </div>
+                        {item.notes && (
+                          <p className="text-[11px] text-stone-400 mt-1 line-clamp-2">{item.notes}</p>
+                        )}
+                      </div>
+                    </div>
                   </div>
                 ))}
               </div>
@@ -4859,6 +4940,9 @@ const StrategyApp = () => {
   const [majorTodos, setMajorTodos] = useState(() => {
     return readSimpleCache(MAJOR_TODOS_CACHE_KEY) || [];
   });
+  const [wishListItems, setWishListItems] = useState(() => {
+    return readSimpleCache(WISH_LIST_CACHE_KEY) || [];
+  });
   const [quarterlyUpdates, setQuarterlyUpdates] = useState([]);
   const [quarterlyDraft, setQuarterlyDraft] = useState(null);
   const [inlineQuarterEdit, setInlineQuarterEdit] = useState(null);
@@ -4982,10 +5066,11 @@ const StrategyApp = () => {
       const results = await Promise.allSettled([
         SheetsAPI.fetchMetrics(),
         SheetsAPI.fetchSectionSnapshots(),
-        SheetsAPI.fetchMajorTodos()
+        SheetsAPI.fetchMajorTodos(),
+        SheetsAPI.fetchWishList()
       ]);
 
-      const [metricsResult, snapshotResult, todosResult] = results;
+      const [metricsResult, snapshotResult, todosResult, wishListResult] = results;
       if (metricsResult.status === 'fulfilled' && metricsResult.value) {
         setMetrics(metricsResult.value);
         writeSimpleCache(METRICS_CACHE_KEY, metricsResult.value);
@@ -4993,6 +5078,10 @@ const StrategyApp = () => {
       if (snapshotResult.status === 'fulfilled' && snapshotResult.value) {
         setSectionSnapshots(snapshotResult.value);
         writeSimpleCache(SNAPSHOTS_CACHE_KEY, snapshotResult.value);
+      }
+      if (wishListResult.status === 'fulfilled' && wishListResult.value) {
+        setWishListItems(wishListResult.value);
+        writeSimpleCache(WISH_LIST_CACHE_KEY, wishListResult.value);
       }
       if (todosResult.status === 'fulfilled' && todosResult.value?.length) {
         // Merge server todos with local state: skip locally deleted items,
@@ -5217,6 +5306,7 @@ const StrategyApp = () => {
               <DashboardView
                 metrics={metrics}
                 majorTodos={majorTodos}
+                wishListItems={wishListItems}
                 onAddTodo={handleAddTodo}
                 onToggleTodo={handleToggleTodo}
                 onDeleteTodo={handleDeleteTodo}

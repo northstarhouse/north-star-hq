@@ -72,6 +72,10 @@ const MAJOR_TODOS_SHEET_ID = '1Ylg3LAhhs1tEoVU9qRzhAK19mxKMRNhQjp8-a8dFW1Q';
 const MAJOR_TODOS_SHEET_NAME = 'Major Todos';
 const MAJOR_TODOS_HEADERS = ['id', 'text', 'done', 'createdAt', 'completedAt'];
 
+const WISH_LIST_SHEET_ID = '1MMhfOlupYVbYatvp3wr668_PPvh7Js8MA5aPdfEpCN8';
+const WISH_LIST_SHEET_NAME = 'Wish List';
+const WISH_LIST_HEADERS = ['item', 'areaSupported', 'link', 'estimatedCost', 'quantity', 'notes'];
+
 const FOCUS_GOALS_SHEET_NAME = 'Focus Areas';
 const FOCUS_GOALS_HEADERS = [
   'id',
@@ -516,6 +520,30 @@ function deleteMajorTodo(id) {
   return { deleted: true };
 }
 
+function getWishList() {
+  try {
+    const ss = SpreadsheetApp.openById(WISH_LIST_SHEET_ID);
+    const sheet = ss.getSheetByName(WISH_LIST_SHEET_NAME);
+    if (!sheet) return [];
+    const data = sheet.getDataRange().getValues();
+    if (data.length <= 1) return [];
+    const headers = data[0].map((h) => String(h).trim().toLowerCase()
+      .replace(/\s+(.)/g, (_, c) => c.toUpperCase()));
+    return data.slice(1)
+      .filter((row) => row.some((cell) => cell !== '' && cell !== null))
+      .map((row) => {
+        const obj = {};
+        WISH_LIST_HEADERS.forEach((key, i) => {
+          obj[key] = row[i] !== undefined ? String(row[i]).trim() : '';
+        });
+        return obj;
+      })
+      .filter((item) => item.item);
+  } catch (err) {
+    return [];
+  }
+}
+
 /**
  * Get or create the file upload folder in Drive
  */
@@ -791,6 +819,12 @@ function doGet(e) {
       const todos = getMajorTodos();
       return ContentService
         .createTextOutput(JSON.stringify({ success: true, todos: todos }))
+        .setMimeType(ContentService.MimeType.JSON);
+    }
+    if (action === 'getWishList') {
+      const items = getWishList();
+      return ContentService
+        .createTextOutput(JSON.stringify({ success: true, items: items }))
         .setMimeType(ContentService.MimeType.JSON);
     }
     if (action === 'getSheetLastUpdated') {
