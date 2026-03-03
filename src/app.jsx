@@ -4631,7 +4631,10 @@ const DashboardView = ({
               { label: 'Board Submission Form', href: 'https://drive.google.com/file/d/1_-AcaquXeK-O1x9AOubbQNCwoLWzu3f_/view?usp=drive_link' },
               { label: 'Incident & Injury Form', href: 'https://drive.google.com/file/d/1UNzWO6b_-YbKd_rYUxC5GkA2dRQVfcg-/view?usp=drive_link' },
               { label: 'Brick Form', href: 'https://drive.google.com/drive/folders/1m7RLU9lwPS_0N-qqwP2aNJaz6fp6UXQt?dmr=1&ec=wgc-drive-%5Bmodule%5D-goto' },
-              { label: 'Thank You Notes', href: 'https://drive.google.com/drive/folders/1Mi8nNZzNWx1fz7CQ11XiW8SHPqQnBAgR?usp=sharing' }
+              { label: 'Thank You Notes', href: 'https://drive.google.com/drive/folders/1Mi8nNZzNWx1fz7CQ11XiW8SHPqQnBAgR?usp=sharing' },
+              { label: '2026 Pricing Guide', href: 'https://drive.google.com/file/d/1Lp3WDaYukjmZ4lB_iS4sJj9PC6fjzz6I/view?usp=drive_link' },
+              { label: 'Creative Rental Form', href: 'https://drive.google.com/file/d/1-o6xmhV3BfFX245AlrplzT4ndyLFIJaL/view?usp=drive_link' },
+              { label: 'Creative Rental Contract', href: 'https://docs.google.com/document/d/1hKb9QK7MmrNpbmQcONyqNFbffEYGqJm5/edit?usp=drive_link&ouid=115056477782763582621&rtpof=true&sd=true' }
             ].map((form) => (
               <a
                 key={form.label}
