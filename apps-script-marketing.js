@@ -448,6 +448,32 @@ function doGet(e) {
   return buildResponse({ status: 'ok' });
 }
 
+function dismissVolunteerInquiry(firstName, lastName) {
+  try {
+    const spreadsheet = SpreadsheetApp.openById(VOLUNTEER_INQUIRY_SHEET_ID);
+    let sheet = spreadsheet.getSheetByName(VOLUNTEER_INQUIRY_SHEET_NAME);
+    if (!sheet) sheet = spreadsheet.getSheets()[0];
+    const data = sheet.getDataRange().getValues();
+    if (data.length <= 1) return { status: 'not_found' };
+    const headers = data[0].map(function(h) { return String(h).trim(); });
+    const fnIdx = headers.indexOf('First Name');
+    const lnIdx = headers.indexOf('Last Name');
+    const yesIdx = headers.indexOf('Yes');
+    if (fnIdx < 0 || yesIdx < 0) return { status: 'error', message: 'Headers not found' };
+    for (var i = 1; i < data.length; i++) {
+      var fn = String(data[i][fnIdx] || '').trim();
+      var ln = lnIdx >= 0 ? String(data[i][lnIdx] || '').trim() : '';
+      if (fn === String(firstName).trim() && ln === String(lastName).trim()) {
+        sheet.getRange(i + 1, yesIdx + 1).setValue('Yes');
+        return { status: 'saved' };
+      }
+    }
+    return { status: 'not_found' };
+  } catch (err) {
+    return { status: 'error', message: String(err) };
+  }
+}
+
 function doPost(e) {
   const payload = e && e.postData ? e.postData.contents : '';
   let data = {};
@@ -456,6 +482,12 @@ function doPost(e) {
   } catch (error) {
     return buildResponse({ status: 'error', message: 'Invalid JSON payload' });
   }
+
+  if (data.action === 'volunteer_inquiry_dismiss') {
+    const result = dismissVolunteerInquiry(data.firstName || '', data.lastName || '');
+    return buildResponse(result);
+  }
+
   if (data.action === 'oot_notice' && data.entry) {
     const sheet = SpreadsheetApp.openById('1dLNdvhcW1_36brUdahk_eh73qx127GYM8djHMJbyazg')
       .getSheetByName('OOT Notice');

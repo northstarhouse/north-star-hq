@@ -1147,6 +1147,46 @@ function doGet(e) {
 /**
  * Handle POST requests - create, update, delete
  */
+function dismissAcknowledgement(name) {
+  try {
+    const ss = SpreadsheetApp.openById(DONATIONS_SHEET_ID);
+    const sheet = ss.getSheetByName(DONATIONS_SHEET_NAME);
+    if (!sheet) return { success: false };
+    const lastRow = sheet.getLastRow();
+    if (lastRow < 2) return { success: false };
+    const data = sheet.getRange(2, 1, lastRow - 1, 9).getValues();
+    for (var i = 0; i < data.length; i++) {
+      if (String(data[i][0]).trim() === String(name).trim()) {
+        sheet.getRange(i + 2, 9).setValue(true);
+        return { success: true };
+      }
+    }
+    return { success: false };
+  } catch (err) {
+    return { success: false, error: String(err) };
+  }
+}
+
+function dismissWishListItem(item) {
+  try {
+    const ss = SpreadsheetApp.openById(WISH_LIST_SHEET_ID);
+    const sheet = ss.getSheetByName(WISH_LIST_SHEET_NAME);
+    if (!sheet) return { success: false };
+    const lastRow = sheet.getLastRow();
+    if (lastRow < 2) return { success: false };
+    const data = sheet.getRange(2, 1, lastRow - 1, 1).getValues();
+    for (var i = data.length - 1; i >= 0; i--) {
+      if (String(data[i][0]).trim() === String(item).trim()) {
+        sheet.deleteRow(i + 2);
+        return { success: true };
+      }
+    }
+    return { success: false };
+  } catch (err) {
+    return { success: false, error: String(err) };
+  }
+}
+
 function doPost(e) {
   try {
     const data = JSON.parse(e.postData.contents);
@@ -1193,6 +1233,12 @@ function doPost(e) {
         break;
       case 'deleteMajorTodo':
         result = deleteMajorTodo(data.id);
+        break;
+      case 'dismissAcknowledgement':
+        result = dismissAcknowledgement(data.name);
+        break;
+      case 'dismissWishListItem':
+        result = dismissWishListItem(data.item);
         break;
       case 'saveBooking':
         result = saveBooking(data.booking);

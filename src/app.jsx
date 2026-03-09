@@ -4360,7 +4360,6 @@ const DashboardView = ({
   wishListItems,
   pendingAcknowledgements,
   volunteerInquiries = [],
-  dismissedInboxKeys = new Set(),
   onDismissInboxItem = () => {},
   onAddTodo,
   onToggleTodo,
@@ -4513,13 +4512,10 @@ const DashboardView = ({
               <span className="text-sm uppercase tracking-[0.2em] font-semibold text-gold">Cosmic Inbox</span>
             </div>
             {(() => {
-              const ackItems = pendingAcknowledgements.filter(d => !dismissedInboxKeys.has(`ack:${d.name}`));
-              const inqItems = volunteerInquiries.filter(inq => !dismissedInboxKeys.has(`inq:${inq.firstName} ${inq.lastName}`));
-              const wishItems = wishListItems.filter(item => !dismissedInboxKeys.has(`wish:${item.item}`));
-              const total = ackItems.length + inqItems.length + wishItems.length;
-              const CheckBtn = ({ itemKey }) => (
+              const total = pendingAcknowledgements.length + volunteerInquiries.length + wishListItems.length;
+              const CheckBtn = ({ type, payload }) => (
                 <button
-                  onClick={() => onDismissInboxItem(itemKey)}
+                  onClick={() => onDismissInboxItem(null, type, payload)}
                   className="w-5 h-5 rounded-full border border-stone-200 flex items-center justify-center text-stone-300 hover:border-gold hover:text-gold transition flex-shrink-0"
                   title="Mark done"
                 >
@@ -4531,26 +4527,26 @@ const DashboardView = ({
               if (total === 0) return <p className="text-stone-400 text-sm text-center py-3">Nothing in the inbox.</p>;
               return (
                 <div className="space-y-1.5 max-h-[260px] overflow-y-auto pr-1">
-                  {ackItems.map((donor, idx) => (
+                  {pendingAcknowledgements.map((donor, idx) => (
                     <div key={`ack-${idx}`} className="flex items-center gap-3 bg-white rounded-xl border border-stone-100 px-4 py-2.5 hover:border-gold/30 transition">
-                      <CheckBtn itemKey={`ack:${donor.name}`} />
+                      <CheckBtn type="ack" payload={donor} />
                       <svg className="w-3.5 h-3.5 text-gold/60 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /></svg>
                       <span className="text-sm text-ink flex-1 truncate">{donor.name}</span>
                       <span className="text-[10px] text-stone-400 flex-shrink-0">thank you note</span>
                     </div>
                   ))}
-                  {inqItems.map((inq, idx) => (
+                  {volunteerInquiries.map((inq, idx) => (
                     <div key={`inq-${idx}`} className="flex items-center gap-3 bg-white rounded-xl border border-stone-100 px-4 py-2.5 hover:border-gold/30 transition">
-                      <CheckBtn itemKey={`inq:${inq.firstName} ${inq.lastName}`} />
+                      <CheckBtn type="inq" payload={inq} />
                       <svg className="w-3.5 h-3.5 text-gold/60 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>
                       <span className="text-sm text-ink flex-1 truncate">{inq.firstName} {inq.lastName}</span>
                       {inq.area && <span className="text-[10px] text-stone-400 flex-shrink-0 truncate max-w-[80px]">{inq.area}</span>}
                       <span className="text-[10px] text-gold/70 flex-shrink-0">inquiry</span>
                     </div>
                   ))}
-                  {wishItems.map((item, idx) => (
+                  {wishListItems.map((item, idx) => (
                     <div key={`wish-${idx}`} className="flex items-center gap-3 bg-white rounded-xl border border-stone-100 px-4 py-2.5 hover:border-gold/30 transition">
-                      <CheckBtn itemKey={`wish:${item.item}`} />
+                      <CheckBtn type="wish" payload={item} />
                       <svg className="w-3.5 h-3.5 text-gold/60 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" /></svg>
                       {item.link ? (
                         <a href={item.link} target="_blank" rel="noopener noreferrer" className="text-sm text-ink hover:text-gold transition flex-1 truncate">{item.item}</a>
@@ -4918,16 +4914,22 @@ const StrategyApp = () => {
     return readSimpleCache(PENDING_ACK_CACHE_KEY) || [];
   });
   const [volunteerInquiries, setVolunteerInquiries] = useState([]);
-  const [dismissedInboxKeys, setDismissedInboxKeys] = useState(() => {
-    try { return new Set(JSON.parse(localStorage.getItem('nsh-inbox-dismissed-v1') || '[]')); } catch { return new Set(); }
-  });
-  const dismissInboxItem = (key) => {
-    setDismissedInboxKeys((prev) => {
-      const next = new Set(prev);
-      next.add(key);
-      try { localStorage.setItem('nsh-inbox-dismissed-v1', JSON.stringify([...next])); } catch {}
-      return next;
-    });
+  const dismissInboxItem = (key, type, payload) => {
+    // Optimistically remove from local state
+    if (type === 'ack') {
+      setPendingAcknowledgements((prev) => prev.filter((d) => d.name !== payload.name));
+      SheetsAPI.postJson(GOOGLE_SCRIPT_URL, { action: 'dismissAcknowledgement', name: payload.name }).catch(() => {});
+    } else if (type === 'wish') {
+      setWishListItems((prev) => prev.filter((i) => i.item !== payload.item));
+      SheetsAPI.postJson(GOOGLE_SCRIPT_URL, { action: 'dismissWishListItem', item: payload.item }).catch(() => {});
+    } else if (type === 'inq') {
+      setVolunteerInquiries((prev) => prev.filter((i) => !(i.firstName === payload.firstName && i.lastName === payload.lastName)));
+      fetch(MARKETING_SCRIPT_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+        body: JSON.stringify({ action: 'volunteer_inquiry_dismiss', firstName: payload.firstName, lastName: payload.lastName })
+      }).catch(() => {});
+    }
   };
   const [quarterlyUpdates, setQuarterlyUpdates] = useState([]);
   const [quarterlyDraft, setQuarterlyDraft] = useState(null);
@@ -5309,7 +5311,6 @@ const StrategyApp = () => {
                 wishListItems={wishListItems}
                 pendingAcknowledgements={pendingAcknowledgements}
                 volunteerInquiries={volunteerInquiries}
-                dismissedInboxKeys={dismissedInboxKeys}
                 onDismissInboxItem={dismissInboxItem}
                 onAddTodo={handleAddTodo}
                 onToggleTodo={handleToggleTodo}
