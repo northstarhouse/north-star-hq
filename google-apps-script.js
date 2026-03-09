@@ -72,6 +72,8 @@ const MAJOR_TODOS_SHEET_ID = '1Ylg3LAhhs1tEoVU9qRzhAK19mxKMRNhQjp8-a8dFW1Q';
 const MAJOR_TODOS_SHEET_NAME = 'Major Todos';
 const MAJOR_TODOS_HEADERS = ['id', 'text', 'done', 'priority', 'createdAt', 'completedAt'];
 
+const VOLUNTEER_INQUIRY_SHEET_ID = '1dLNdvhcW1_36brUdahk_eh73qx127GYM8djHMJbyazg';
+
 const WISH_LIST_SHEET_ID = '1MMhfOlupYVbYatvp3wr668_PPvh7Js8MA5aPdfEpCN8';
 const WISH_LIST_SHEET_NAME = 'Wish List';
 const WISH_LIST_HEADERS = ['item', 'areaSupported', 'link', 'estimatedCost', 'quantity', 'notes'];
@@ -566,6 +568,36 @@ function getWishList() {
   }
 }
 
+function getVolunteerInquiries() {
+  try {
+    const ss = SpreadsheetApp.openById(VOLUNTEER_INQUIRY_SHEET_ID);
+    const sheet = ss.getSheets()[0];
+    const data = sheet.getDataRange().getValues();
+    if (data.length <= 1) return [];
+    const headers = data[0].map(function(h) { return String(h).trim(); });
+    return data.slice(1)
+      .filter(function(row) { return row.some(function(c) { return c !== '' && c !== null; }); })
+      .map(function(row) {
+        var obj = {};
+        headers.forEach(function(h, i) { obj[h] = row[i] !== undefined ? row[i] : ''; });
+        var contacted = obj['Yes'];
+        return {
+          firstName: String(obj['First Name'] || '').trim(),
+          lastName: String(obj['Last Name'] || '').trim(),
+          area: String(obj['Area'] || '').trim(),
+          email: String(obj['Email'] || '').trim(),
+          phone: String(obj['Phone Number'] || '').trim(),
+          date: obj['Date'] ? new Date(obj['Date']).toISOString() : '',
+          notes: String(obj['Notes'] || '').trim(),
+          contacted: contacted === true || contacted === 'Yes' || contacted === 'TRUE' || contacted === true
+        };
+      })
+      .filter(function(r) { return r.firstName && !r.contacted; });
+  } catch (err) {
+    return [];
+  }
+}
+
 /**
  * Get or create the file upload folder in Drive
  */
@@ -853,6 +885,12 @@ function doGet(e) {
       const donors = getPendingAcknowledgements();
       return ContentService
         .createTextOutput(JSON.stringify({ success: true, donors: donors }))
+        .setMimeType(ContentService.MimeType.JSON);
+    }
+    if (action === 'getVolunteerInquiries') {
+      const inquiries = getVolunteerInquiries();
+      return ContentService
+        .createTextOutput(JSON.stringify({ success: true, inquiries: inquiries }))
         .setMimeType(ContentService.MimeType.JSON);
     }
     if (action === 'getSheetLastUpdated') {

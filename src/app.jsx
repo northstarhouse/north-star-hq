@@ -209,6 +209,19 @@ const SheetsAPI = {
     }
   },
 
+  fetchVolunteerInquiries: async () => {
+    if (!SheetsAPI.isConfigured()) return [];
+    try {
+      const response = await fetch(`${GOOGLE_SCRIPT_URL}?action=getVolunteerInquiries`);
+      if (!response.ok) throw new Error('Failed to fetch volunteer inquiries');
+      const data = await response.json();
+      return data.inquiries || [];
+    } catch (error) {
+      console.error('Error fetching volunteer inquiries:', error);
+      return [];
+    }
+  },
+
   fetchPendingAcknowledgements: async () => {
     if (!SheetsAPI.isConfigured()) return [];
     try {
@@ -4346,6 +4359,7 @@ const DashboardView = ({
   majorTodos,
   wishListItems,
   pendingAcknowledgements,
+  volunteerInquiries = [],
   onAddTodo,
   onToggleTodo,
   onDeleteTodo,
@@ -4495,11 +4509,11 @@ const DashboardView = ({
                 <path strokeLinecap="round" strokeLinejoin="round" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
               </svg>
               <span className="text-sm uppercase tracking-[0.2em] font-semibold text-gold">Cosmic Inbox</span>
-              {(wishListItems.length + pendingAcknowledgements.length) > 0 && (
-                <span className="ml-auto text-[10px] text-stone-400">{wishListItems.length + pendingAcknowledgements.length} item{(wishListItems.length + pendingAcknowledgements.length) !== 1 ? 's' : ''}</span>
+              {(wishListItems.length + pendingAcknowledgements.length + volunteerInquiries.length) > 0 && (
+                <span className="ml-auto text-[10px] text-stone-400">{wishListItems.length + pendingAcknowledgements.length + volunteerInquiries.length} item{(wishListItems.length + pendingAcknowledgements.length + volunteerInquiries.length) !== 1 ? 's' : ''}</span>
               )}
             </div>
-            {wishListItems.length === 0 && pendingAcknowledgements.length === 0 ? (
+            {wishListItems.length === 0 && pendingAcknowledgements.length === 0 && volunteerInquiries.length === 0 ? (
               <p className="text-stone-400 text-sm text-center py-3">Nothing in the inbox yet.</p>
             ) : (
               <div className="space-y-1.5 max-h-[260px] overflow-y-auto pr-1">
@@ -4510,6 +4524,16 @@ const DashboardView = ({
                     </svg>
                     <span className="text-sm text-ink flex-1 truncate">{donor.name}</span>
                     <span className="text-[10px] text-stone-400 flex-shrink-0">thank you note</span>
+                  </div>
+                ))}
+                {volunteerInquiries.map((inq, idx) => (
+                  <div key={`inq-${idx}`} className="flex items-center gap-3 bg-white rounded-xl border border-stone-100 px-4 py-2.5 hover:border-gold/30 transition">
+                    <svg className="w-3.5 h-3.5 text-gold/60 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                    </svg>
+                    <span className="text-sm text-ink flex-1 truncate">{inq.firstName} {inq.lastName}</span>
+                    {inq.area && <span className="text-[10px] text-stone-400 flex-shrink-0 truncate max-w-[80px]">{inq.area}</span>}
+                    <span className="text-[10px] text-gold/70 flex-shrink-0">inquiry</span>
                   </div>
                 ))}
                 {wishListItems.map((item, idx) => (
@@ -4883,6 +4907,7 @@ const StrategyApp = () => {
   const [pendingAcknowledgements, setPendingAcknowledgements] = useState(() => {
     return readSimpleCache(PENDING_ACK_CACHE_KEY) || [];
   });
+  const [volunteerInquiries, setVolunteerInquiries] = useState([]);
   const [quarterlyUpdates, setQuarterlyUpdates] = useState([]);
   const [quarterlyDraft, setQuarterlyDraft] = useState(null);
   const [inlineQuarterEdit, setInlineQuarterEdit] = useState(null);
@@ -5018,10 +5043,11 @@ const StrategyApp = () => {
         SheetsAPI.fetchSectionSnapshots(),
         SheetsAPI.fetchMajorTodos(),
         SheetsAPI.fetchWishList(),
-        SheetsAPI.fetchPendingAcknowledgements()
+        SheetsAPI.fetchPendingAcknowledgements(),
+        SheetsAPI.fetchVolunteerInquiries()
       ]);
 
-      const [metricsResult, snapshotResult, todosResult, wishListResult, pendingAckResult] = results;
+      const [metricsResult, snapshotResult, todosResult, wishListResult, pendingAckResult, inquiriesResult] = results;
       if (metricsResult.status === 'fulfilled' && metricsResult.value) {
         setMetrics(metricsResult.value);
         writeSimpleCache(METRICS_CACHE_KEY, metricsResult.value);
@@ -5037,6 +5063,9 @@ const StrategyApp = () => {
       if (pendingAckResult.status === 'fulfilled' && pendingAckResult.value) {
         setPendingAcknowledgements(pendingAckResult.value);
         writeSimpleCache(PENDING_ACK_CACHE_KEY, pendingAckResult.value);
+      }
+      if (inquiriesResult.status === 'fulfilled' && inquiriesResult.value) {
+        setVolunteerInquiries(inquiriesResult.value);
       }
       if (todosResult.status === 'fulfilled' && todosResult.value?.length) {
         // Merge server todos with local state: skip locally deleted items,
@@ -5258,6 +5287,7 @@ const StrategyApp = () => {
                 majorTodos={majorTodos}
                 wishListItems={wishListItems}
                 pendingAcknowledgements={pendingAcknowledgements}
+                volunteerInquiries={volunteerInquiries}
                 onAddTodo={handleAddTodo}
                 onToggleTodo={handleToggleTodo}
                 onDeleteTodo={handleDeleteTodo}
