@@ -555,6 +555,7 @@ function getWishList() {
       .replace(/\s+(.)/g, (_, c) => c.toUpperCase()));
     return data.slice(1)
       .filter((row) => row.some((cell) => cell !== '' && cell !== null))
+      .filter((row) => row[6] !== true && row[6] !== 'true' && row[6] !== 'TRUE')
       .map((row) => {
         const obj = {};
         WISH_LIST_HEADERS.forEach((key, i) => {
@@ -1175,9 +1176,9 @@ function dismissWishListItem(item) {
     const lastRow = sheet.getLastRow();
     if (lastRow < 2) return { success: false };
     const data = sheet.getRange(2, 1, lastRow - 1, 1).getValues();
-    for (var i = data.length - 1; i >= 0; i--) {
+    for (var i = 0; i < data.length; i++) {
       if (String(data[i][0]).trim() === String(item).trim()) {
-        sheet.deleteRow(i + 2);
+        sheet.getRange(i + 2, 7).setValue(true);
         return { success: true };
       }
     }
