@@ -3346,7 +3346,7 @@ const EventManagementApp = () => {
     }
   };
 
-  if (selectedEvent) {
+  if (false && selectedEvent) {
     const daysUntil = calculateDaysUntil(selectedEvent.date);
     const marketingProgress = getChecklistProgress(selectedEvent.checklist);
     const planningProgress = getPlanningProgress(selectedEvent.planningChecklist);
@@ -3819,17 +3819,7 @@ const EventManagementApp = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-stone-50 via-stone-100 to-amber-50 p-4 sm:p-6">
       <div className="max-w-6xl mx-auto">
-        <div className="flex items-center justify-end mb-8">
-          <button
-            onClick={() => setShowNewEventForm(true)}
-            className="flex items-center justify-center gap-2 px-6 py-3 bg-[#886c44] text-white rounded-md hover:bg-[#755a38] transition-all shadow-md w-full md:w-auto"
-          >
-            <Plus size={20} />
-            New Event
-          </button>
-        </div>
-
-        {showNewEventForm && (
+        {false && showNewEventForm && (
           <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center p-4 sm:p-6 z-50">
             <div className="bg-gradient-to-br from-white to-stone-50 rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto p-6 sm:p-8 border border-stone-200">
               <h2 className="text-2xl font-light text-stone-900 mb-6">Create New Event</h2>
@@ -4004,28 +3994,10 @@ const EventManagementApp = () => {
           </div>
         )}
 
-        {events.length > 0 && (
-          <div className="mb-6">
-            <select
-              value={selectedEvent?.id || ''}
-              onChange={(e) => {
-                const ev = events.find(ev => String(ev.id) === e.target.value);
-                if (ev) setSelectedEvent(ev);
-              }}
-              className="w-full px-4 py-2 border border-stone-200 rounded-md focus:ring-2 focus:ring-amber-400 focus:border-transparent bg-white text-stone-900"
-            >
-              <option value="">Select an event…</option>
-              {events.map(ev => (
-                <option key={ev.id} value={ev.id}>
-                  {ev.name}{ev.isTBD ? ' (TBD)' : ev.date ? ` — ${formatDateDisplay(ev.date)}` : ''}
-                </option>
-              ))}
-            </select>
-          </div>
-        )}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
 
         {/* Newsletter Content - Inline */}
-        <div className="mt-10 bg-white rounded-lg border border-stone-200 shadow-sm p-6">
+        <div className="bg-white rounded-lg border border-stone-200 shadow-sm p-6">
           <div className="flex items-start justify-between gap-4 mb-4">
             <h2 className="text-lg font-medium text-stone-900">Newsletter Content</h2>
             <div className="flex items-center gap-3">
@@ -4071,7 +4043,7 @@ const EventManagementApp = () => {
         </div>
 
         {/* Newsletter Stats - Inline */}
-        <div className="mt-6 bg-white rounded-lg border border-stone-200 shadow-sm p-6">
+        <div className="bg-white rounded-lg border border-stone-200 shadow-sm p-6">
           <div className="flex items-start justify-between gap-4 mb-4">
             <h2 className="text-lg font-medium text-stone-900">Newsletter Stats</h2>
             <button
@@ -4108,7 +4080,7 @@ const EventManagementApp = () => {
         </div>
 
         {/* Press Releases - Inline */}
-        <div className="mt-6 bg-white rounded-lg border border-stone-200 shadow-sm p-6">
+        <div className="bg-white rounded-lg border border-stone-200 shadow-sm p-6">
           <div className="flex items-start justify-between gap-4 mb-4">
             <h2 className="text-lg font-medium text-stone-900">Press Releases</h2>
             <div className="flex items-center gap-3">
@@ -4154,7 +4126,7 @@ const EventManagementApp = () => {
         </div>
 
         {/* Monthly Posting Schedule - Inline */}
-        <div className="mt-6 bg-white rounded-lg border border-stone-200 shadow-sm p-6">
+        <div className="bg-white rounded-lg border border-stone-200 shadow-sm p-6">
           <div className="flex items-start justify-between gap-4 mb-4">
             <h2 className="text-lg font-medium text-stone-900">Monthly Posting Schedule</h2>
             <div className="flex items-center gap-3">
@@ -4205,6 +4177,8 @@ const EventManagementApp = () => {
             ))}
           </div>
         </div>
+
+        </div>{/* end 2x2 grid */}
 
       </div>
 
