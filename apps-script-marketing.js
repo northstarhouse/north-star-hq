@@ -128,7 +128,7 @@ function getVolunteerInquiries() {
           phone: String(obj['Phone Number'] || '').trim(),
           date: obj['Date'] ? new Date(obj['Date']).toISOString() : '',
           notes: String(obj['Notes'] || '').trim(),
-          contacted: contacted === true || contacted === 'Yes' || contacted === 'TRUE'
+          contacted: contacted === true || contacted === 'Yes' || contacted === 'TRUE' || contacted === 'true'
         };
       })
       .filter(function(r) { return r.firstName && !r.contacted; });
@@ -464,7 +464,7 @@ function dismissVolunteerInquiry(firstName, lastName) {
       var fn = String(data[i][fnIdx] || '').trim();
       var ln = lnIdx >= 0 ? String(data[i][lnIdx] || '').trim() : '';
       if (fn === String(firstName).trim() && ln === String(lastName).trim()) {
-        sheet.getRange(i + 1, yesIdx + 1).setValue('Yes');
+        sheet.getRange(i + 1, yesIdx + 1).setValue(true);
         return { status: 'saved' };
       }
     }
