@@ -17,6 +17,7 @@ const PENDING_ACK_CACHE_KEY = 'nsh-strategy-pending-ack-v1';
 
 const USE_SHEETS = true;
 const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbydaZEpixA_RWAQ42HPsrFe6gCrf5bDYhWbj7COlNwmq-tQOOJaBiivRQfahnGq3WIDeQ/exec';
+const MARKETING_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzcuMhZ1h15zP7IgYhyCBChgkx_mbe23G6756V2_lHNT1grfgKR-AuZxbHt3t806h8-/exec';
 const DRIVE_SCRIPT_URL = GOOGLE_SCRIPT_URL;
 const HONEYBOOK_MESSAGES_URL = 'https://docs.google.com/spreadsheets/d/1l-FsSLYELMM5pMwWS92UgKlwPmsrCmNEe7kmrEaQB6M/edit?gid=0#gid=0';
 const HONEYBOOK_MESSAGES_EMBED_URL = 'https://docs.google.com/spreadsheets/d/1l-FsSLYELMM5pMwWS92UgKlwPmsrCmNEe7kmrEaQB6M/preview';
@@ -210,9 +211,8 @@ const SheetsAPI = {
   },
 
   fetchVolunteerInquiries: async () => {
-    if (!SheetsAPI.isConfigured()) return [];
     try {
-      const response = await fetch(`${GOOGLE_SCRIPT_URL}?action=getVolunteerInquiries`);
+      const response = await fetch(`${MARKETING_SCRIPT_URL}?action=volunteer_inquiry_list`);
       if (!response.ok) throw new Error('Failed to fetch volunteer inquiries');
       const data = await response.json();
       return data.inquiries || [];
