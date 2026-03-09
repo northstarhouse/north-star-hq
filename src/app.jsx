@@ -5230,20 +5230,6 @@ const StrategyApp = () => {
               >
                 Marketing
               </button>
-              <select
-                value={SECTION_PAGES.some((item) => item.key === view) ? view : ''}
-                onChange={(event) => {
-                  const nextView = event.target.value;
-                  if (!nextView) return;
-                  setView(nextView);
-                }}
-                className="tab-button tab-select text-sm bg-white min-w-[220px]"
-              >
-                <option value="">Operational Areas</option>
-                {SECTION_PAGES.map((item) => (
-                  <option key={item.key} value={item.key}>{item.label}</option>
-                ))}
-              </select>
             </div>
           </div>
         </div>
