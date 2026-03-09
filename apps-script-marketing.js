@@ -1,0 +1,614 @@
+const SHEET_NAME = 'Event Tracking';
+const NEWSLETTER_SHEET_ID = '1dLNdvhcW1_36brUdahk_eh73qx127GYM8djHMJbyazg';
+const NEWSLETTER_SHEET_NAME = 'Newsletter Content';
+const POSTING_SHEET_ID = '1dLNdvhcW1_36brUdahk_eh73qx127GYM8djHMJbyazg';
+const POSTING_SHEET_NAME = 'Monthly Posting Schedule';
+const BOOKINGS_SHEET_ID = '1kv2-3cMhzViMr1Fs-SGmiY3DJe05p3r7VIVk5LOj-_k';
+const BOOKINGS_SHEET_NAME = 'Bookings';
+const NEWSLETTER_STATS_SHEET_ID = '1dLNdvhcW1_36brUdahk_eh73qx127GYM8djHMJbyazg';
+const NEWSLETTER_STATS_SHEET_NAME = 'Newsletter Stats';
+const VOLUNTEER_INQUIRY_SHEET_ID = '1dLNdvhcW1_36brUdahk_eh73qx127GYM8djHMJbyazg';
+const VOLUNTEER_INQUIRY_SHEET_NAME = 'Volunteer Inquiry';
+const HEADERS = [
+  'ID',
+  'Event',
+  'Date',
+  'Time',
+  'Goals',
+  'Outcomes',
+  'Advertising',
+  'Total Spent',
+  'Total Earned',
+  'Volunteers',
+  'Notes',
+  'Target Attendance',
+  'Current RSVPs',
+  'Checklist',
+  'Planning Checklist',
+  'Planning Notes',
+  'Is TBD',
+  'Created At',
+  'Post Event Attendance',
+  'Post Event Notes'
+];
+const NEWSLETTER_HEADERS = [
+  'Month',
+  'Main Feature',
+  'Main Upcoming Event',
+  'Event Recaps / Blogs',
+  'Volunteer Monthly Hours',
+  'Donation Needs',
+  'Other',
+  'Published'
+];
+const POSTING_HEADERS = [
+  'Month',
+  'Week 1',
+  'Week 2',
+  'Week 3',
+  'Week 4',
+  'Completed'
+];
+const NEWSLETTER_STATS_HEADERS = [
+  'Month',
+  'Edition',
+  'Bricks - Donations - Loyalty Program',
+  'Volunteers',
+  'Calendar',
+  'Feature',
+  'GoFundMe',
+  'Fundraising Brought In',
+  'Notes'
+];
+
+function getSheet() {
+  const spreadsheet = SpreadsheetApp.getActiveSpreadsheet();
+  let sheet = spreadsheet.getSheetByName(SHEET_NAME);
+  if (!sheet) {
+    sheet = spreadsheet.insertSheet(SHEET_NAME);
+  }
+  return sheet;
+}
+
+function getNewsletterSheet() {
+  const spreadsheet = SpreadsheetApp.openById(NEWSLETTER_SHEET_ID);
+  let sheet = spreadsheet.getSheetByName(NEWSLETTER_SHEET_NAME);
+  if (!sheet) {
+    sheet = spreadsheet.getSheets()[0] || spreadsheet.insertSheet(NEWSLETTER_SHEET_NAME);
+  }
+  return sheet;
+}
+
+function getPostingSheet() {
+  const spreadsheet = SpreadsheetApp.openById(POSTING_SHEET_ID);
+  let sheet = spreadsheet.getSheetByName(POSTING_SHEET_NAME);
+  if (!sheet) {
+    sheet = spreadsheet.getSheets()[0] || spreadsheet.insertSheet(POSTING_SHEET_NAME);
+  }
+  return sheet;
+}
+
+function getBookingsSheet() {
+  const spreadsheet = SpreadsheetApp.openById(BOOKINGS_SHEET_ID);
+  let sheet = spreadsheet.getSheetByName(BOOKINGS_SHEET_NAME);
+  if (!sheet) {
+    sheet = spreadsheet.getSheets()[0] || spreadsheet.insertSheet(BOOKINGS_SHEET_NAME);
+  }
+  return sheet;
+}
+
+function getNewsletterStatsSheet() {
+  const spreadsheet = SpreadsheetApp.openById(NEWSLETTER_STATS_SHEET_ID);
+  let sheet = spreadsheet.getSheetByName(NEWSLETTER_STATS_SHEET_NAME);
+  if (!sheet) {
+    sheet = spreadsheet.insertSheet(NEWSLETTER_STATS_SHEET_NAME);
+  }
+  return sheet;
+}
+
+function getVolunteerInquiries() {
+  try {
+    const spreadsheet = SpreadsheetApp.openById(VOLUNTEER_INQUIRY_SHEET_ID);
+    let sheet = spreadsheet.getSheetByName(VOLUNTEER_INQUIRY_SHEET_NAME);
+    if (!sheet) sheet = spreadsheet.getSheets()[0];
+    const data = sheet.getDataRange().getValues();
+    if (data.length <= 1) return [];
+    const headers = data[0].map(function(h) { return String(h).trim(); });
+    return data.slice(1)
+      .filter(function(row) { return row.some(function(c) { return c !== '' && c !== null; }); })
+      .map(function(row) {
+        var obj = {};
+        headers.forEach(function(h, i) { obj[h] = row[i] !== undefined ? row[i] : ''; });
+        var contacted = obj['Yes'];
+        return {
+          firstName: String(obj['First Name'] || '').trim(),
+          lastName: String(obj['Last Name'] || '').trim(),
+          area: String(obj['Area'] || '').trim(),
+          email: String(obj['Email'] || '').trim(),
+          phone: String(obj['Phone Number'] || '').trim(),
+          date: obj['Date'] ? new Date(obj['Date']).toISOString() : '',
+          notes: String(obj['Notes'] || '').trim(),
+          contacted: contacted === true || contacted === 'Yes' || contacted === 'TRUE'
+        };
+      })
+      .filter(function(r) { return r.firstName && !r.contacted; });
+  } catch (err) {
+    return [];
+  }
+}
+
+function ensureNewsletterHeaders(sheet) {
+  const lastCol = Math.max(sheet.getLastColumn(), 1);
+  const existing = sheet.getRange(1, 1, 1, lastCol).getValues()[0];
+  let headers = existing.filter(Boolean);
+  if (headers.length === 0) {
+    headers = NEWSLETTER_HEADERS.slice();
+  } else {
+    NEWSLETTER_HEADERS.forEach((header) => {
+      if (headers.indexOf(header) === -1) {
+        headers.push(header);
+      }
+    });
+  }
+  sheet.getRange(1, 1, 1, headers.length).setValues([headers]);
+  return headers;
+}
+
+function ensurePostingHeaders(sheet) {
+  const headers = POSTING_HEADERS.slice();
+  sheet.getRange(1, 1, 1, headers.length).setValues([headers]);
+  return headers;
+}
+
+function ensureNewsletterStatsHeaders(sheet) {
+  const lastCol = Math.max(sheet.getLastColumn(), 1);
+  const existing = sheet.getRange(1, 1, 1, lastCol).getValues()[0];
+  let headers = existing.filter(Boolean);
+  if (headers.length === 0) {
+    headers = NEWSLETTER_STATS_HEADERS.slice();
+  } else {
+    NEWSLETTER_STATS_HEADERS.forEach((header) => {
+      if (headers.indexOf(header) === -1) {
+        headers.push(header);
+      }
+    });
+  }
+  sheet.getRange(1, 1, 1, headers.length).setValues([headers]);
+  return headers;
+}
+
+function ensureHeaders(sheet) {
+  const lastCol = Math.max(sheet.getLastColumn(), 1);
+  const existing = sheet.getRange(1, 1, 1, lastCol).getValues()[0];
+  let headers = existing.filter(Boolean);
+  if (headers.length === 0) {
+    headers = HEADERS.slice();
+  } else {
+    HEADERS.forEach((header) => {
+      if (headers.indexOf(header) === -1) {
+        headers.push(header);
+      }
+    });
+  }
+  sheet.getRange(1, 1, 1, headers.length).setValues([headers]);
+  return headers;
+}
+
+function rowToNewsletter(headers, row) {
+  const entry = {};
+  headers.forEach((header, index) => {
+    entry[header] = row[index] !== undefined ? row[index] : '';
+  });
+  return {
+    month: entry['Month'],
+    mainFeature: entry['Main Feature'],
+    mainUpcomingEvent: entry['Main Upcoming Event'],
+    eventRecaps: entry['Event Recaps / Blogs'],
+    volunteerHours: entry['Volunteer Monthly Hours'],
+    donationNeeds: entry['Donation Needs'],
+    other: entry['Other'],
+    published: String(entry['Published']).toLowerCase() === 'true'
+  };
+}
+
+function newsletterToRow(headers, entry) {
+  const row = new Array(headers.length).fill('');
+  headers.forEach((header, index) => {
+    switch (header) {
+      case 'Month': row[index] = entry.month || ''; break;
+      case 'Main Feature': row[index] = entry.mainFeature || ''; break;
+      case 'Main Upcoming Event': row[index] = entry.mainUpcomingEvent || ''; break;
+      case 'Event Recaps / Blogs': row[index] = entry.eventRecaps || ''; break;
+      case 'Volunteer Monthly Hours': row[index] = entry.volunteerHours || ''; break;
+      case 'Donation Needs': row[index] = entry.donationNeeds || ''; break;
+      case 'Other': row[index] = entry.other || ''; break;
+      case 'Published': row[index] = entry.published ? 'true' : 'false'; break;
+      default: row[index] = '';
+    }
+  });
+  return row;
+}
+
+function rowToNewsletterStats(headers, row) {
+  const entry = {};
+  headers.forEach((header, index) => {
+    entry[header] = row[index] !== undefined ? row[index] : '';
+  });
+  return {
+    month: entry['Month'],
+    edition: entry['Edition'],
+    bricksDonationsLoyalty: entry['Bricks - Donations - Loyalty Program'],
+    volunteers: entry['Volunteers'],
+    calendar: entry['Calendar'],
+    feature: entry['Feature'],
+    goFundMe: entry['GoFundMe'],
+    fundraisingBroughtIn: entry['Fundraising Brought In'],
+    notes: entry['Notes']
+  };
+}
+
+function newsletterStatsToRow(headers, entry) {
+  const row = new Array(headers.length).fill('');
+  headers.forEach((header, index) => {
+    switch (header) {
+      case 'Month': row[index] = entry.month || ''; break;
+      case 'Edition': row[index] = entry.edition || ''; break;
+      case 'Bricks - Donations - Loyalty Program': row[index] = entry.bricksDonationsLoyalty || ''; break;
+      case 'Volunteers': row[index] = entry.volunteers || ''; break;
+      case 'Calendar': row[index] = entry.calendar || ''; break;
+      case 'Feature': row[index] = entry.feature || ''; break;
+      case 'GoFundMe': row[index] = entry.goFundMe || ''; break;
+      case 'Fundraising Brought In': row[index] = entry.fundraisingBroughtIn || ''; break;
+      case 'Notes': row[index] = entry.notes || ''; break;
+      default: row[index] = '';
+    }
+  });
+  return row;
+}
+
+function rowToPosting(headers, row) {
+  const entry = {};
+  headers.forEach((header, index) => {
+    entry[header] = row[index] !== undefined ? row[index] : '';
+  });
+  return {
+    month: entry['Month'],
+    completed: String(entry['Completed']).toLowerCase() === 'true',
+    week1: entry['Week 1'],
+    week2: entry['Week 2'],
+    week3: entry['Week 3'],
+    week4: entry['Week 4'],
+    entries: entry['Entries']
+  };
+}
+
+function rowToBooking(rowIndex, row) {
+  const normalizeBoolean = (value) => {
+    if (value === true) return true;
+    if (value === false) return false;
+    return String(value).toLowerCase() === 'true';
+  };
+  return {
+    rowIndex: rowIndex,
+    name: row[0] || '',
+    type: row[1] || '',
+    photoPermission: normalizeBoolean(row[6]),
+    link: row[7] || '',
+    posted: normalizeBoolean(row[8])
+  };
+}
+
+function postingToRow(headers, entry) {
+  const row = new Array(headers.length).fill('');
+  const legacyEntries = entry.entries
+    || [entry.week1, entry.week2, entry.week3, entry.week4].filter(Boolean).join('\n\n');
+  headers.forEach((header, index) => {
+    switch (header) {
+      case 'Month': row[index] = entry.month || ''; break;
+      case 'Week 1': row[index] = entry.week1 || ''; break;
+      case 'Week 2': row[index] = entry.week2 || ''; break;
+      case 'Week 3': row[index] = entry.week3 || ''; break;
+      case 'Week 4': row[index] = entry.week4 || ''; break;
+      case 'Completed': row[index] = entry.completed ? 'true' : 'false'; break;
+      case 'Entries':
+        row[index] = typeof legacyEntries === 'string' ? legacyEntries : JSON.stringify(legacyEntries || {});
+        break;
+      default: row[index] = '';
+    }
+  });
+  return row;
+}
+
+function rowToEvent(headers, row) {
+  const event = {};
+  headers.forEach((header, index) => {
+    event[header] = row[index] !== undefined ? row[index] : '';
+  });
+  return {
+    id: event['ID'],
+    name: event['Event'],
+    date: event['Date'],
+    time: event['Time'],
+    goals: event['Goals'],
+    outcomes: event['Outcomes'],
+    advertising: event['Advertising'],
+    totalSpent: event['Total Spent'],
+    totalEarned: event['Total Earned'],
+    volunteers: event['Volunteers'],
+    notes: event['Notes'],
+    targetAttendance: event['Target Attendance'],
+    currentRSVPs: event['Current RSVPs'],
+    checklist: event['Checklist'],
+    planningChecklist: event['Planning Checklist'],
+    planningNotes: event['Planning Notes'],
+    isTBD: String(event['Is TBD']).toLowerCase() === 'true',
+    createdAt: event['Created At'],
+    postEventAttendance: event['Post Event Attendance'],
+    postEventNotes: event['Post Event Notes']
+  };
+}
+
+function eventToRow(headers, event) {
+  const row = new Array(headers.length).fill('');
+  headers.forEach((header, index) => {
+    switch (header) {
+      case 'ID': row[index] = event.id || ''; break;
+      case 'Event': row[index] = event.name || ''; break;
+      case 'Date': row[index] = event.date || ''; break;
+      case 'Time': row[index] = event.time || ''; break;
+      case 'Goals': row[index] = event.goals || ''; break;
+      case 'Outcomes': row[index] = event.outcomes || ''; break;
+      case 'Advertising': row[index] = event.advertising || ''; break;
+      case 'Total Spent': row[index] = event.totalSpent || ''; break;
+      case 'Total Earned': row[index] = event.totalEarned || ''; break;
+      case 'Volunteers': row[index] = event.volunteers || ''; break;
+      case 'Notes': row[index] = event.notes || ''; break;
+      case 'Target Attendance': row[index] = event.targetAttendance || ''; break;
+      case 'Current RSVPs': row[index] = event.currentRSVPs || ''; break;
+      case 'Checklist':
+        row[index] = typeof event.checklist === 'string' ? event.checklist : JSON.stringify(event.checklist || {});
+        break;
+      case 'Planning Checklist':
+        row[index] = typeof event.planningChecklist === 'string'
+          ? event.planningChecklist
+          : JSON.stringify(event.planningChecklist || {});
+        break;
+      case 'Planning Notes': row[index] = event.planningNotes || ''; break;
+      case 'Is TBD': row[index] = event.isTBD ? 'true' : 'false'; break;
+      case 'Created At': row[index] = event.createdAt || ''; break;
+      case 'Post Event Attendance': row[index] = event.postEventAttendance || ''; break;
+      case 'Post Event Notes': row[index] = event.postEventNotes || ''; break;
+      default: row[index] = '';
+    }
+  });
+  return row;
+}
+
+function buildResponse(payload) {
+  return ContentService.createTextOutput(JSON.stringify(payload))
+    .setMimeType(ContentService.MimeType.JSON);
+}
+
+function doGet(e) {
+  const action = e && e.parameter ? e.parameter.action : '';
+
+  if (action === 'volunteer_inquiry_list') {
+    const inquiries = getVolunteerInquiries();
+    return buildResponse({ inquiries: inquiries });
+  }
+
+  if (action === 'newsletter_list') {
+    const sheet = getNewsletterSheet();
+    const headers = ensureNewsletterHeaders(sheet);
+    const lastRow = sheet.getLastRow();
+    const rows = lastRow > 1 ? sheet.getRange(2, 1, lastRow - 1, headers.length).getValues() : [];
+    const entries = rows.map((row) => rowToNewsletter(headers, row));
+    return buildResponse({ entries: entries });
+  }
+
+  if (action === 'posting_list') {
+    const sheet = getPostingSheet();
+    const headers = ensurePostingHeaders(sheet);
+    const lastRow = sheet.getLastRow();
+    const rows = lastRow > 1 ? sheet.getRange(2, 1, lastRow - 1, headers.length).getValues() : [];
+    const entries = rows.map((row) => rowToPosting(headers, row));
+    return buildResponse({ entries: entries });
+  }
+
+  if (action === 'bookings_list') {
+    const sheet = getBookingsSheet();
+    const lastRow = sheet.getLastRow();
+    const rowCount = Math.max(lastRow - 1, 0);
+    const rows = rowCount > 0 ? sheet.getRange(2, 1, rowCount, 9).getValues() : [];
+    const entries = rows
+      .map((row, index) => rowToBooking(index + 2, row))
+      .filter((entry) => String(entry.name).trim().length > 0);
+    return buildResponse({ count: entries.length, entries: entries });
+  }
+
+  if (action === 'newsletter_stats_list') {
+    const sheet = getNewsletterStatsSheet();
+    const headers = ensureNewsletterStatsHeaders(sheet);
+    const lastRow = sheet.getLastRow();
+    const rows = lastRow > 1 ? sheet.getRange(2, 1, lastRow - 1, headers.length).getValues() : [];
+    const entries = rows.map((row) => rowToNewsletterStats(headers, row));
+    return buildResponse({ entries: entries });
+  }
+
+  const sheet = getSheet();
+  const headers = ensureHeaders(sheet);
+
+  if (action === 'list') {
+    const lastRow = sheet.getLastRow();
+    const rows = lastRow > 1 ? sheet.getRange(2, 1, lastRow - 1, headers.length).getValues() : [];
+    const events = rows.map((row) => rowToEvent(headers, row));
+    return buildResponse({ events: events });
+  }
+
+  return buildResponse({ status: 'ok' });
+}
+
+function doPost(e) {
+  const payload = e && e.postData ? e.postData.contents : '';
+  let data = {};
+  try {
+    data = payload ? JSON.parse(payload) : {};
+  } catch (error) {
+    return buildResponse({ status: 'error', message: 'Invalid JSON payload' });
+  }
+  if (data.action === 'oot_notice' && data.entry) {
+    const sheet = SpreadsheetApp.openById('1dLNdvhcW1_36brUdahk_eh73qx127GYM8djHMJbyazg')
+      .getSheetByName('OOT Notice');
+    if (!sheet) {
+      return buildResponse({ status: 'error', message: 'OOT Notice sheet not found' });
+    }
+    const entry = data.entry || {};
+    sheet.appendRow([
+      entry.name || '',
+      entry.date1 || '',
+      entry.date2 || '',
+      entry.notes || ''
+    ]);
+    return buildResponse({ status: 'saved' });
+  }
+
+  if (data.action === 'newsletter_upsert' && data.entry) {
+    const sheet = getNewsletterSheet();
+    const headers = ensureNewsletterHeaders(sheet);
+    const entry = data.entry || {};
+    const monthValue = String(entry.month || '');
+    const monthIndex = headers.indexOf('Month') + 1;
+    const lastRow = sheet.getLastRow();
+    let targetRow = null;
+    if (lastRow > 1 && monthIndex > 0) {
+      const monthValues = sheet.getRange(2, monthIndex, lastRow - 1, 1).getValues();
+      for (let i = 0; i < monthValues.length; i += 1) {
+        if (String(monthValues[i][0]) === monthValue) {
+          targetRow = i + 2;
+          break;
+        }
+      }
+    }
+    const rowValues = newsletterToRow(headers, entry);
+    if (targetRow) {
+      sheet.getRange(targetRow, 1, 1, headers.length).setValues([rowValues]);
+    } else {
+      sheet.appendRow(rowValues);
+    }
+    return buildResponse({ status: 'saved', month: entry.month });
+  }
+
+  if (data.action === 'posting_upsert' && data.entry) {
+    const sheet = getPostingSheet();
+    const headers = ensurePostingHeaders(sheet);
+    const entry = data.entry || {};
+    const monthValue = String(entry.month || '');
+    const monthIndex = headers.indexOf('Month') + 1;
+    const lastRow = sheet.getLastRow();
+    let targetRow = null;
+    if (lastRow > 1 && monthIndex > 0) {
+      const monthValues = sheet.getRange(2, monthIndex, lastRow - 1, 1).getValues();
+      for (let i = 0; i < monthValues.length; i += 1) {
+        if (String(monthValues[i][0]) === monthValue) {
+          targetRow = i + 2;
+          break;
+        }
+      }
+    }
+    const rowValues = postingToRow(headers, entry);
+    if (targetRow) {
+      sheet.getRange(targetRow, 1, 1, headers.length).setValues([rowValues]);
+    } else {
+      sheet.appendRow(rowValues);
+    }
+    return buildResponse({ status: 'saved', month: entry.month });
+  }
+
+  if (data.action === 'newsletter_stats_upsert' && data.entry) {
+    const sheet = getNewsletterStatsSheet();
+    const headers = ensureNewsletterStatsHeaders(sheet);
+    const entry = data.entry || {};
+    const monthValue = String(entry.month || '');
+    const monthIndex = headers.indexOf('Month') + 1;
+    const lastRow = sheet.getLastRow();
+    let targetRow = null;
+    if (lastRow > 1 && monthIndex > 0) {
+      const monthValues = sheet.getRange(2, monthIndex, lastRow - 1, 1).getValues();
+      for (let i = 0; i < monthValues.length; i += 1) {
+        if (String(monthValues[i][0]) === monthValue) {
+          targetRow = i + 2;
+          break;
+        }
+      }
+    }
+    const rowValues = newsletterStatsToRow(headers, entry);
+    if (targetRow) {
+      sheet.getRange(targetRow, 1, 1, headers.length).setValues([rowValues]);
+    } else {
+      sheet.appendRow(rowValues);
+    }
+    return buildResponse({ status: 'saved', month: entry.month });
+  }
+
+  if (data.action === 'bookings_update' && data.entry) {
+    const sheet = getBookingsSheet();
+    const entry = data.entry || {};
+    const rowIndex = Number(entry.rowIndex);
+    if (!rowIndex || rowIndex < 2) {
+      return buildResponse({ status: 'error', message: 'Invalid row index' });
+    }
+    const values = [[
+      entry.photoPermission ? true : false,
+      entry.link || '',
+      entry.posted ? true : false
+    ]];
+    sheet.getRange(rowIndex, 7, 1, 3).setValues(values);
+    return buildResponse({ status: 'saved', rowIndex: rowIndex });
+  }
+
+  const sheet = getSheet();
+  const headers = ensureHeaders(sheet);
+
+  if (data.action === 'delete' && data.id) {
+    const idIndex = headers.indexOf('ID') + 1;
+    const lastRow = sheet.getLastRow();
+    if (lastRow > 1 && idIndex > 0) {
+      const idValues = sheet.getRange(2, idIndex, lastRow - 1, 1).getValues();
+      for (let i = 0; i < idValues.length; i += 1) {
+        if (String(idValues[i][0]) === String(data.id)) {
+          sheet.deleteRow(i + 2);
+          return buildResponse({ status: 'deleted', id: data.id });
+        }
+      }
+    }
+    return buildResponse({ status: 'not_found', id: data.id });
+  }
+
+  const event = data.event || {};
+  if (!event.id) {
+    event.id = new Date().getTime();
+  }
+
+  const idIndex = headers.indexOf('ID') + 1;
+  const lastRow = sheet.getLastRow();
+  let targetRow = null;
+
+  if (lastRow > 1 && idIndex > 0) {
+    const idValues = sheet.getRange(2, idIndex, lastRow - 1, 1).getValues();
+    for (let i = 0; i < idValues.length; i += 1) {
+      if (String(idValues[i][0]) === String(event.id)) {
+        targetRow = i + 2;
+        break;
+      }
+    }
+  }
+
+  const rowValues = eventToRow(headers, event);
+  if (targetRow) {
+    sheet.getRange(targetRow, 1, 1, headers.length).setValues([rowValues]);
+  } else {
+    sheet.appendRow(rowValues);
+  }
+
+  return buildResponse({ status: 'saved', id: event.id });
+}
