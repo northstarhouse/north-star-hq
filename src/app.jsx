@@ -4105,23 +4105,18 @@ const EventManagementApp = () => {
             <div className="text-sm font-medium text-stone-900">{monthLabels[pressReleaseMonth]}</div>
             <button type="button" className="px-2 py-1 border border-stone-200 rounded text-xs text-stone-600 hover:bg-stone-50" onClick={() => setPressReleaseMonth((pressReleaseMonth + 1) % 12)}>Next</button>
           </div>
-          <div className="space-y-3">
-            {pressReleaseFields.map(field => (
-              <div key={field.id}>
-                <div className="text-xs font-medium text-stone-500 mb-1">{field.label}</div>
-                {editingPressRelease ? (
-                  <textarea
-                    value={pressReleaseData[pressReleaseMonth]?.[field.id] || ''}
-                    onChange={(e) => updatePressReleaseField(pressReleaseMonth, field.id, e.target.value)}
-                    rows={2}
-                    className="w-full px-3 py-2 border border-stone-200 rounded-md focus:ring-2 focus:ring-amber-400 focus:border-transparent bg-white text-sm"
-                    placeholder={`Add ${field.label.toLowerCase()}...`}
-                  />
-                ) : (
-                  <div className="text-sm text-stone-800">{pressReleaseData[pressReleaseMonth]?.[field.id] || <span className="text-stone-400">—</span>}</div>
-                )}
-              </div>
-            ))}
+          <div>
+            {editingPressRelease ? (
+              <textarea
+                value={pressReleaseData[pressReleaseMonth]?.summary || ''}
+                onChange={(e) => updatePressReleaseField(pressReleaseMonth, 'summary', e.target.value)}
+                rows={4}
+                className="w-full px-3 py-2 border border-stone-200 rounded-md focus:ring-2 focus:ring-amber-400 focus:border-transparent bg-white text-sm"
+                placeholder="What was this press release about?"
+              />
+            ) : (
+              <div className="text-sm text-stone-800">{pressReleaseData[pressReleaseMonth]?.summary || <span className="text-stone-400">—</span>}</div>
+            )}
           </div>
         </div>
 
