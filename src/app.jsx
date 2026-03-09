@@ -4004,99 +4004,23 @@ const EventManagementApp = () => {
           </div>
         )}
 
-        {events.length === 0 ? (
-          <div className="text-center py-16 bg-white rounded-lg border border-stone-200 shadow-sm">
-            <Calendar size={48} className="mx-auto text-stone-300 mb-4" />
-            <p className="text-stone-700 mb-2">No events yet</p>
-            <p className="text-sm text-stone-500">Create your first event to get started</p>
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-5">
-            {events.map(event => {
-              const daysUntil = calculateDaysUntil(event.date);
-              const progress = getChecklistProgress(event.checklist);
-              const isPastEvent = daysUntil !== null && daysUntil < 0;
-              const planningProgress = getPlanningProgress(event.planningChecklist);
-
-              return (
-                <div
-                  key={event.id}
-                  onClick={() => setSelectedEvent(event)}
-                  className="bg-white rounded-lg shadow-md border border-stone-200 overflow-hidden cursor-pointer hover:shadow-lg hover:border-amber-400 transition-all"
-                >
-                  {event.flyerImage && (
-                    <div className="w-full h-40 bg-gradient-to-br from-stone-100 to-amber-100">
-                      <img
-                        src={event.flyerImage}
-                        alt={event.name}
-                        className="w-full h-full object-cover"
-                      />
-                    </div>
-                  )}
-                  <div className="p-5">
-                    <h3 className="text-lg font-medium text-stone-900 mb-2">{event.name}</h3>
-                    <div className="flex items-center justify-between text-sm text-stone-700 mb-3">
-                      <div className="flex items-center gap-2">
-                        <Calendar size={14} />
-                      <span>
-                        {event.isTBD
-                          ? 'TBD'
-                          : `${formatDateDisplay(event.date)}${event.time ? ` · ${formatTimeDisplay(event.time)}` : ''}`}
-                      </span>
-                      </div>
-                      {daysUntil !== null && !isPastEvent && (
-                        <span className="text-xs text-stone-500">
-                          {daysUntil} days
-                        </span>
-                      )}
-                    </div>
-
-                    {!isPastEvent && (
-                      <div className="mt-3 space-y-2 text-xs text-stone-600">
-                        {(event.targetAttendance || event.currentRSVPs) && (
-                          <div className="flex items-center justify-between">
-                            <span>Goal / Current</span>
-                            <span className="font-medium text-stone-800">
-                              {event.targetAttendance || 0} / {event.currentRSVPs || 0}
-                            </span>
-                          </div>
-                        )}
-                        <div className="flex items-center justify-between">
-                          <span>Marketing progress</span>
-                          <span className="font-medium text-stone-800">{progress}%</span>
-                        </div>
-                        <div className="h-2 bg-stone-100 rounded-full overflow-hidden shadow-inner">
-                          <div
-                            className="h-full bg-gradient-to-r from-amber-400 via-amber-500 to-amber-400 transition-all duration-500"
-                            style={{ width: `${Math.min(progress, 100)}%` }}
-                          />
-                        </div>
-                        <div className="text-[11px] text-stone-500">
-                          {getChecklistCompletion(event.checklist)} tasks
-                        </div>
-                        <div className="flex items-center justify-between">
-                          <span>Event planning progress</span>
-                          <span className="font-medium text-stone-800">{planningProgress}%</span>
-                        </div>
-                        <div className="h-2 bg-stone-100 rounded-full overflow-hidden shadow-inner">
-                          <div
-                            className="h-full bg-gradient-to-r from-amber-400 via-amber-500 to-amber-400 transition-all duration-500"
-                            style={{ width: `${Math.min(planningProgress, 100)}%` }}
-                          />
-                        </div>
-                        <div className="text-[11px] text-stone-500">
-                          {getPlanningCompletion(event.planningChecklist)} tasks
-                        </div>
-                      </div>
-                    )}
-
-                    {isPastEvent && (
-                      <div className="text-xs text-stone-500">Past event</div>
-                    )}
-                  </div>
-                </div>
-              );
-            })}
+        {events.length > 0 && (
+          <div className="mb-6">
+            <select
+              value={selectedEvent?.id || ''}
+              onChange={(e) => {
+                const ev = events.find(ev => String(ev.id) === e.target.value);
+                if (ev) setSelectedEvent(ev);
+              }}
+              className="w-full px-4 py-2 border border-stone-200 rounded-md focus:ring-2 focus:ring-amber-400 focus:border-transparent bg-white text-stone-900"
+            >
+              <option value="">Select an event…</option>
+              {events.map(ev => (
+                <option key={ev.id} value={ev.id}>
+                  {ev.name}{ev.isTBD ? ' (TBD)' : ev.date ? ` — ${formatDateDisplay(ev.date)}` : ''}
+                </option>
+              ))}
+            </select>
           </div>
         )}
 
