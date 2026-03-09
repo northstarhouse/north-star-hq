@@ -4856,6 +4856,7 @@ const InitiativeDetailView = ({ initiative, onBack, onEdit, onSubmitUpdate, onRe
 const StrategyApp = () => {
   const [view, setView] = useState('dashboard');
   const [isLoading, setIsLoading] = useState(true);
+  const [showNavMenu, setShowNavMenu] = useState(false);
   const scriptConfigWarning = getScriptConfigWarning();
   const [metrics, setMetrics] = useState({
     donationsTotal: null,
@@ -5209,22 +5210,31 @@ const StrategyApp = () => {
                 <div className="text-xs text-steel"></div>
               </div>
             </div>
-            <div className="flex items-center gap-2 text-sm flex-wrap" />
-          </div>
-          <div className="pb-4">
-            <div className="flex flex-wrap gap-3">
+            <div className="relative flex items-center gap-2 text-sm">
               <button
-                onClick={() => setView('dashboard')}
-                className={`tab-button text-sm min-w-[200px] ${view === 'dashboard' ? 'active' : ''}`}
+                onClick={() => setShowNavMenu((v) => !v)}
+                className="w-9 h-9 rounded-md border border-stone-200 bg-white text-stone-600 hover:bg-stone-50 flex items-center justify-center shadow-sm transition-colors"
               >
-                2026 Snapshot
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5">
+                  <line x1="2" y1="4" x2="14" y2="4" /><line x1="2" y1="8" x2="14" y2="8" /><line x1="2" y1="12" x2="14" y2="12" />
+                </svg>
               </button>
-              <button
-                onClick={() => setView('marketing')}
-                className={`tab-button text-sm min-w-[200px] ${view === 'marketing' ? 'active' : ''}`}
-              >
-                Marketing
-              </button>
+              {showNavMenu && (
+                <div className="absolute right-0 top-11 z-50 w-44 bg-white border border-stone-200 rounded-lg shadow-lg py-1 text-sm" onMouseLeave={() => setShowNavMenu(false)}>
+                  {[
+                    { key: 'dashboard', label: '2026 Snapshot' },
+                    { key: 'marketing', label: 'Marketing' },
+                  ].map(({ key, label }) => (
+                    <button
+                      key={key}
+                      onClick={() => { setView(key); setShowNavMenu(false); }}
+                      className={`w-full text-left px-4 py-2 hover:bg-stone-50 transition-colors ${view === key ? 'text-amber-700 font-medium' : 'text-stone-700'}`}
+                    >
+                      {label}
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
         </div>
