@@ -4715,7 +4715,7 @@ const DashboardView = ({
           </div>
         </div>
         </div>
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-2 gap-3 order-first lg:order-last self-start">
           {[
             { label: 'Donation total', value: formatCurrency(metrics?.donationsTotal) },
             { label: 'Events booked', value: formatCount(metrics?.eventsCount) },
@@ -4728,23 +4728,23 @@ const DashboardView = ({
                 href={metricLinks[item.label]}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="bg-white rounded-xl p-3 border border-stone-100 card-shadow block transition hover:-translate-y-0.5 hover:shadow-lg focus:outline-none focus-visible:ring-2 focus-visible:ring-gold/60 relative aspect-square flex flex-col justify-between"
+                className="bg-white rounded-xl p-3 border border-stone-100 card-shadow block transition hover:-translate-y-0.5 hover:shadow-lg focus:outline-none focus-visible:ring-2 focus-visible:ring-gold/60 relative"
                 aria-label={`${item.label} details`}
               >
-                <div className="text-[10px] uppercase tracking-wide text-steel">{item.label}</div>
+                <div className="text-[10px] uppercase tracking-wide text-steel mb-1">{item.label}</div>
                 <div className="font-display text-xl text-ink">{item.value}</div>
                 {metricGoals[item.label] ? (
-                  <div className="text-[9px] uppercase tracking-wide text-steel">
+                  <div className="text-[9px] uppercase tracking-wide text-steel mt-1">
                     {metricGoals[item.label]}
                   </div>
                 ) : null}
               </a>
             ) : (
-              <div key={item.label} className="bg-white rounded-xl p-3 border border-stone-100 card-shadow relative aspect-square flex flex-col justify-between">
-                <div className="text-[10px] uppercase tracking-wide text-steel">{item.label}</div>
+              <div key={item.label} className="bg-white rounded-xl p-3 border border-stone-100 card-shadow relative">
+                <div className="text-[10px] uppercase tracking-wide text-steel mb-1">{item.label}</div>
                 <div className="font-display text-xl text-ink">{item.value}</div>
                 {metricGoals[item.label] ? (
-                  <div className="text-[9px] uppercase tracking-wide text-steel">
+                  <div className="text-[9px] uppercase tracking-wide text-steel mt-1">
                     {metricGoals[item.label]}
                   </div>
                 ) : null}
