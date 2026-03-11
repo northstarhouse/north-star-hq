@@ -21,6 +21,8 @@ const MARKETING_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzcuMhZ1h1
 const DRIVE_SCRIPT_URL = GOOGLE_SCRIPT_URL;
 const HONEYBOOK_MESSAGES_URL = 'https://docs.google.com/spreadsheets/d/1l-FsSLYELMM5pMwWS92UgKlwPmsrCmNEe7kmrEaQB6M/edit?gid=0#gid=0';
 const HONEYBOOK_MESSAGES_EMBED_URL = 'https://docs.google.com/spreadsheets/d/1l-FsSLYELMM5pMwWS92UgKlwPmsrCmNEe7kmrEaQB6M/preview';
+const ACCOUNTING_URL = 'https://docs.google.com/spreadsheets/d/1VcV4DksZpcZX6SxTteYJDvbaOB2qSBDDzDALiynWdgM/edit?usp=sharing';
+const ACCOUNTING_EMBED_URL = 'https://docs.google.com/spreadsheets/d/1VcV4DksZpcZX6SxTteYJDvbaOB2qSBDDzDALiynWdgM/preview';
 const VOICEMAILS_EMBED_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSTge4UtsTFma1Y4ppSeC5nVORQiTtVLXXysbHUNdf3sOBb372QR9YG3Q9AfUNbGFD3K2Y0FeP4V5P2/pubhtml?gid=0&single=true&widget=false&headers=false&chrome=false';
 const HONEYBOOK_SHEET_ID = '1l-FsSLYELMM5pMwWS92UgKlwPmsrCmNEe7kmrEaQB6M';
 const VOICEMAILS_SHEET_ID = '1kqVXngOaf_X1lrB6Nbi5U_3NJ4_P_fGMqxhyqdfuDT0';
@@ -2164,6 +2166,55 @@ const VoicemailsView = ({ onBack }) => (
   </div>
 );
 
+const AccountingView = ({ onBack }) => (
+  <div className="max-w-6xl mx-auto fade-up">
+    <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
+      <div>
+        <div className="text-xs uppercase tracking-[0.3em] text-steel">Finance</div>
+        <h2 className="font-display text-3xl text-ink">Accounting Info</h2>
+        <p className="text-sm text-stone-500 mt-2">Live Google Sheet with a cleaner workspace.</p>
+      </div>
+      <div className="flex flex-wrap items-center gap-2">
+        <button
+          onClick={onBack}
+          className="px-4 py-2 rounded-xl border border-stone-200 text-sm text-ink bg-white hover:border-gold/60 transition"
+        >
+          <span className="inline-flex items-center gap-2">
+            <IconBack size={16} />
+            Back to Dashboard
+          </span>
+        </button>
+        <a
+          href={ACCOUNTING_URL}
+          target="_blank"
+          rel="noreferrer"
+          className="px-4 py-2 rounded-xl bg-gold text-white text-sm shadow hover:opacity-90 transition"
+        >
+          Open in Google Sheets
+        </a>
+      </div>
+    </div>
+
+    <div className="grid grid-cols-1 gap-6">
+      <div className="glass rounded-3xl border border-stone-100 card-shadow overflow-hidden">
+        <div className="flex items-center justify-between px-5 py-4 border-b border-stone-100 bg-white/80">
+          <div>
+            <div className="text-xs uppercase tracking-wide text-steel">Live sheet</div>
+            <div className="text-sm text-stone-500">Updates as you edit the spreadsheet.</div>
+          </div>
+        </div>
+        <div className="h-[72vh] md:h-[84vh]">
+          <iframe
+            title="Accounting Info"
+            src={ACCOUNTING_EMBED_URL}
+            className="w-full h-full border-0 bg-white"
+          />
+        </div>
+      </div>
+    </div>
+  </div>
+);
+
 const Calendar = ({ size = 24, className = "" }) => (
   <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
     <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
@@ -3114,15 +3165,17 @@ const EventManagementApp = () => {
 
   const getChecklistProgress = (checklist) => {
     const requiredItems = marketingChecklist.filter(item => !item.optional);
-    if (!requiredItems.length) return 0;
-    const completed = requiredItems.filter(item => checklist?.[item.id]).length;
-    return Math.round((completed / requiredItems.length) * 100);
+    const applicable = requiredItems.filter(item => checklist?.[item.id] !== 'na');
+    if (!applicable.length) return 100;
+    const completed = applicable.filter(item => checklist?.[item.id] === true).length;
+    return Math.round((completed / applicable.length) * 100);
   };
 
   const getPlanningProgress = (planning) => {
-    const completed = Object.values(planning || {}).filter(item => item && item.done).length;
-    if (!planningChecklist.length) return 0;
-    return Math.round((completed / planningChecklist.length) * 100);
+    const applicable = planningChecklist.filter(item => !(planning?.[item.id]?.na));
+    if (!applicable.length) return 100;
+    const completed = applicable.filter(item => planning?.[item.id]?.done).length;
+    return Math.round((completed / applicable.length) * 100);
   };
 
   const getStatusColor = (percentage) => {
@@ -3139,13 +3192,15 @@ const EventManagementApp = () => {
 
   const getChecklistCompletion = (checklist) => {
     const requiredItems = marketingChecklist.filter(item => !item.optional);
-    const completed = requiredItems.filter(item => checklist?.[item.id]).length;
-    return `${completed}/${requiredItems.length}`;
+    const applicable = requiredItems.filter(item => checklist?.[item.id] !== 'na');
+    const completed = applicable.filter(item => checklist?.[item.id] === true).length;
+    return `${completed}/${applicable.length}`;
   };
 
   const getPlanningCompletion = (planning) => {
-    const completed = Object.values(planning || {}).filter(item => item && item.done).length;
-    return `${completed}/${planningChecklist.length}`;
+    const applicable = planningChecklist.filter(item => !(planning?.[item.id]?.na));
+    const completed = applicable.filter(item => planning?.[item.id]?.done).length;
+    return `${completed}/${applicable.length}`;
   };
 
   const getPostingCompletedCount = (entries) =>
@@ -3269,11 +3324,38 @@ const EventManagementApp = () => {
     let updatedEvent = null;
     const nextEvents = events.map(event => {
       if (event.id === eventId) {
+        const current = event.checklist[itemId];
         updatedEvent = {
           ...event,
           checklist: {
             ...event.checklist,
-            [itemId]: !event.checklist[itemId]
+            [itemId]: current === true ? false : true
+          }
+        };
+        return updatedEvent;
+      }
+      return event;
+    });
+    setEvents(nextEvents);
+    persistEvents(nextEvents);
+    if (selectedEvent && selectedEvent.id === eventId && updatedEvent) {
+      setSelectedEvent(updatedEvent);
+    }
+    if (updatedEvent) {
+      saveEvent(updatedEvent);
+    }
+  };
+
+  const toggleChecklistItemNA = (eventId, itemId) => {
+    let updatedEvent = null;
+    const nextEvents = events.map(event => {
+      if (event.id === eventId) {
+        const current = event.checklist[itemId];
+        updatedEvent = {
+          ...event,
+          checklist: {
+            ...event.checklist,
+            [itemId]: current === 'na' ? false : 'na'
           }
         };
         return updatedEvent;
@@ -3295,10 +3377,35 @@ const EventManagementApp = () => {
     const nextEvents = events.map(event => {
       if (event.id === eventId) {
         const current = event.planningChecklist || {};
-        const entry = current[itemId] || { done: false, note: '' };
+        const entry = current[itemId] || { done: false, na: false, note: '' };
         const nextChecklist = {
           ...current,
-          [itemId]: { ...entry, done: !entry.done }
+          [itemId]: { ...entry, done: !entry.done, na: false }
+        };
+        updatedEvent = { ...event, planningChecklist: nextChecklist };
+        return updatedEvent;
+      }
+      return event;
+    });
+    setEvents(nextEvents);
+    persistEvents(nextEvents);
+    if (selectedEvent && selectedEvent.id === eventId && updatedEvent) {
+      setSelectedEvent(updatedEvent);
+    }
+    if (updatedEvent) {
+      saveEvent(updatedEvent);
+    }
+  };
+
+  const togglePlanningItemNA = (eventId, itemId) => {
+    let updatedEvent = null;
+    const nextEvents = events.map(event => {
+      if (event.id === eventId) {
+        const current = event.planningChecklist || {};
+        const entry = current[itemId] || { done: false, na: false, note: '' };
+        const nextChecklist = {
+          ...current,
+          [itemId]: { ...entry, na: !entry.na, done: entry.na ? entry.done : false }
         };
         updatedEvent = { ...event, planningChecklist: nextChecklist };
         return updatedEvent;
@@ -3494,19 +3601,31 @@ const EventManagementApp = () => {
                       <span className="text-sm text-stone-600 font-medium">{getChecklistCompletion(selectedEvent.checklist)} complete</span>
                     </div>
                     <div className="space-y-2">
-                      {marketingChecklist.map(item => (
-                        <label key={item.id} className="flex items-start sm:items-center gap-3 p-3 hover:bg-stone-50 rounded-md cursor-pointer transition-colors">
-                          <input
-                            type="checkbox"
-                            checked={selectedEvent.checklist[item.id] || false}
-                            onChange={() => toggleChecklistItem(selectedEvent.id, item.id)}
-                            className="w-5 h-5 text-amber-600 rounded focus:ring-amber-400"
-                          />
-                          <span className={`flex-1 ${selectedEvent.checklist[item.id] ? 'line-through text-gray-400' : 'text-stone-800'} ${item.special ? 'text-sm italic' : ''}`}>
-                            {item.label}
-                          </span>
-                        </label>
-                      ))}
+                      {marketingChecklist.map(item => {
+                        const itemState = selectedEvent.checklist[item.id];
+                        const isDone = itemState === true;
+                        const isNA = itemState === 'na';
+                        return (
+                          <div key={item.id} className="flex items-start sm:items-center gap-3 p-3 hover:bg-stone-50 rounded-md transition-colors">
+                            <input
+                              type="checkbox"
+                              checked={isDone}
+                              onChange={() => toggleChecklistItem(selectedEvent.id, item.id)}
+                              className="w-5 h-5 text-amber-600 rounded focus:ring-amber-400 cursor-pointer"
+                            />
+                            <span className={`flex-1 ${isDone ? 'line-through text-gray-400' : isNA ? 'line-through text-stone-400' : 'text-stone-800'} ${item.special ? 'text-sm italic' : ''}`}>
+                              {item.label}
+                            </span>
+                            <button
+                              type="button"
+                              onClick={() => toggleChecklistItemNA(selectedEvent.id, item.id)}
+                              className={`text-xs px-2 py-0.5 rounded transition-colors ${isNA ? 'bg-stone-200 text-stone-600 font-medium' : 'text-stone-400 hover:text-stone-600 hover:bg-stone-100'}`}
+                            >
+                              N/A
+                            </button>
+                          </div>
+                        );
+                      })}
                     </div>
                   </div>
 
@@ -3720,7 +3839,7 @@ const EventManagementApp = () => {
 
                     <div className="space-y-3">
                       {planningChecklist.map(item => {
-                        const entry = (selectedEvent.planningChecklist || {})[item.id] || { done: false, note: '' };
+                        const entry = (selectedEvent.planningChecklist || {})[item.id] || { done: false, na: false, note: '' };
                         return (
                           <div key={item.id} className="flex flex-col sm:flex-row sm:items-center gap-3 rounded-md bg-white p-3 border border-stone-200">
                             <label className="flex items-center gap-3">
@@ -3730,10 +3849,17 @@ const EventManagementApp = () => {
                                 onChange={() => togglePlanningItem(selectedEvent.id, item.id)}
                                 className="w-5 h-5 text-amber-600 rounded focus:ring-amber-400"
                               />
-                              <span className={`text-sm ${entry.done ? 'line-through text-gray-400' : 'text-stone-800'}`}>
+                              <span className={`text-sm ${entry.done ? 'line-through text-gray-400' : entry.na ? 'line-through text-stone-400' : 'text-stone-800'}`}>
                                 {item.label}
                               </span>
                             </label>
+                            <button
+                              type="button"
+                              onClick={() => togglePlanningItemNA(selectedEvent.id, item.id)}
+                              className={`text-xs px-2 py-0.5 rounded transition-colors self-start sm:self-auto ${entry.na ? 'bg-stone-200 text-stone-600 font-medium' : 'text-stone-400 hover:text-stone-600 hover:bg-stone-100'}`}
+                            >
+                              N/A
+                            </button>
                             <input
                               type="text"
                               value={entry.note || ''}
@@ -4367,6 +4493,7 @@ const DashboardView = ({
   onPriorityTodo,
   onOpenHoneybook,
   onOpenVoicemails,
+  onOpenAccounting,
   unreadHoneybook,
   unreadVoicemails
 }) => {
@@ -4645,6 +4772,31 @@ const DashboardView = ({
                 <span className="w-2 h-2 rounded-full bg-gold flex-shrink-0" />
               )}
             </button>
+            <button
+              onClick={onOpenAccounting}
+              className="inline-flex items-center gap-1.5 rounded-lg border border-stone-200 bg-white/60 px-3 py-1.5 text-xs font-medium text-ink/80 transition hover:border-gold/40 hover:bg-white hover:text-ink relative"
+            >
+              <svg className="w-3 h-3 text-gold/70 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" /></svg>
+              Accounting Info
+            </button>
+            <a
+              href="https://northstarhouse.github.io/voting/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1.5 rounded-lg border border-stone-200 bg-white/60 px-3 py-1.5 text-xs font-medium text-ink/80 transition hover:border-gold/40 hover:bg-white hover:text-ink"
+            >
+              <svg className="w-3 h-3 text-gold/70 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+              Board Voting
+            </a>
+            <a
+              href="https://northstarhouse.github.io/north-star-strategic-plan/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1.5 rounded-lg border border-stone-200 bg-white/60 px-3 py-1.5 text-xs font-medium text-ink/80 transition hover:border-gold/40 hover:bg-white hover:text-ink"
+            >
+              <svg className="w-3 h-3 text-gold/70 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" /></svg>
+              Quarterly Area Updates
+            </a>
             <a
               href="https://northstarhouse.github.io/nsh-events-committee/"
               target="_blank"
@@ -5326,6 +5478,10 @@ const StrategyApp = () => {
                   setView('voicemails');
                   window.scrollTo(0, 0);
                 }}
+                onOpenAccounting={() => {
+                  setView('accounting');
+                  window.scrollTo(0, 0);
+                }}
                 unreadHoneybook={sheetUnread.honeybook}
                 unreadVoicemails={sheetUnread.voicemails}
               />
@@ -5338,6 +5494,9 @@ const StrategyApp = () => {
             )}
             {view === 'voicemails' && (
               <VoicemailsView onBack={() => setView('dashboard')} />
+            )}
+            {view === 'accounting' && (
+              <AccountingView onBack={() => setView('dashboard')} />
             )}
             {['construction', 'grounds', 'interiors', 'docents', 'fund', 'events', 'marketing-ops', 'venue'].includes(view) && (
               <div className="max-w-4xl mx-auto fade-up">
