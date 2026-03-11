@@ -4688,32 +4688,6 @@ const DashboardView = ({
             })()}
           </div>
         </div>
-        <div className="glass rounded-2xl p-4 card-shadow">
-          <div className="flex flex-wrap gap-2">
-            {[
-              { label: 'In-Kind Donation Form', href: 'https://drive.google.com/file/d/1cNGysqW__wS2IEKDaNzG1MPo-5JCE-ay/view' },
-              { label: 'Reimbursement Form', href: 'https://drive.google.com/file/d/1Vkfh6Z5eM1RPUtw6j8mQjqKM71-YFPrW/view?usp=drive_link' },
-              { label: 'Board Submission Form', href: 'https://drive.google.com/file/d/1_-AcaquXeK-O1x9AOubbQNCwoLWzu3f_/view?usp=drive_link' },
-              { label: 'Incident & Injury Form', href: 'https://drive.google.com/file/d/1UNzWO6b_-YbKd_rYUxC5GkA2dRQVfcg-/view?usp=drive_link' },
-              { label: 'Brick Form', href: 'https://drive.google.com/drive/folders/1m7RLU9lwPS_0N-qqwP2aNJaz6fp6UXQt?dmr=1&ec=wgc-drive-%5Bmodule%5D-goto' },
-              { label: 'Thank You Notes', href: 'https://drive.google.com/drive/folders/1Mi8nNZzNWx1fz7CQ11XiW8SHPqQnBAgR?usp=sharing' },
-              { label: '2026 Pricing Guide', href: 'https://drive.google.com/file/d/1Lp3WDaYukjmZ4lB_iS4sJj9PC6fjzz6I/view?usp=drive_link' },
-              { label: 'Creative Rental Form', href: 'https://drive.google.com/file/d/1-o6xmhV3BfFX245AlrplzT4ndyLFIJaL/view?usp=drive_link' },
-              { label: 'Creative Rental Contract', href: 'https://docs.google.com/document/d/1hKb9QK7MmrNpbmQcONyqNFbffEYGqJm5/edit?usp=drive_link&ouid=115056477782763582621&rtpof=true&sd=true' }
-            ].map((form) => (
-              <a
-                key={form.label}
-                href={form.href}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-1.5 rounded-lg border border-stone-200 bg-white/60 px-3 py-1.5 text-xs font-medium text-ink/80 transition hover:border-gold/40 hover:bg-white hover:text-ink"
-              >
-                <svg className="w-3 h-3 text-gold/70 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
-                {form.label}
-              </a>
-            ))}
-          </div>
-        </div>
         </div>
         <div className="grid grid-cols-2 gap-3 order-first lg:order-last self-start">
           {[
@@ -4833,6 +4807,32 @@ const DashboardView = ({
               <svg className="w-3 h-3 text-gold/70 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" /></svg>
               Ideas &amp; Initiatives
             </a>
+          </div>
+          <div className="col-span-2 glass rounded-2xl p-4 card-shadow">
+            <div className="flex flex-wrap gap-2">
+              {[
+                { label: 'In-Kind Donation Form', href: 'https://drive.google.com/file/d/1cNGysqW__wS2IEKDaNzG1MPo-5JCE-ay/view' },
+                { label: 'Reimbursement Form', href: 'https://drive.google.com/file/d/1Vkfh6Z5eM1RPUtw6j8mQjqKM71-YFPrW/view?usp=drive_link' },
+                { label: 'Board Submission Form', href: 'https://drive.google.com/file/d/1_-AcaquXeK-O1x9AOubbQNCwoLWzu3f_/view?usp=drive_link' },
+                { label: 'Incident & Injury Form', href: 'https://drive.google.com/file/d/1UNzWO6b_-YbKd_rYUxC5GkA2dRQVfcg-/view?usp=drive_link' },
+                { label: 'Brick Form', href: 'https://drive.google.com/drive/folders/1m7RLU9lwPS_0N-qqwP2aNJaz6fp6UXQt?dmr=1&ec=wgc-drive-%5Bmodule%5D-goto' },
+                { label: 'Thank You Notes', href: 'https://drive.google.com/drive/folders/1Mi8nNZzNWx1fz7CQ11XiW8SHPqQnBAgR?usp=sharing' },
+                { label: '2026 Pricing Guide', href: 'https://drive.google.com/file/d/1Lp3WDaYukjmZ4lB_iS4sJj9PC6fjzz6I/view?usp=drive_link' },
+                { label: 'Creative Rental Form', href: 'https://drive.google.com/file/d/1-o6xmhV3BfFX245AlrplzT4ndyLFIJaL/view?usp=drive_link' },
+                { label: 'Creative Rental Contract', href: 'https://docs.google.com/document/d/1hKb9QK7MmrNpbmQcONyqNFbffEYGqJm5/edit?usp=drive_link&ouid=115056477782763582621&rtpof=true&sd=true' }
+              ].map((form) => (
+                <a
+                  key={form.label}
+                  href={form.href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1.5 rounded-lg border border-stone-200 bg-white/60 px-3 py-1.5 text-xs font-medium text-ink/80 transition hover:border-gold/40 hover:bg-white hover:text-ink"
+                >
+                  <svg className="w-3 h-3 text-gold/70 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
+                  {form.label}
+                </a>
+              ))}
+            </div>
           </div>
         </div>
       </div>
