@@ -5159,7 +5159,13 @@ const DashboardView = ({
             <div className="space-y-2">
               {SECTION_PAGES.map(({ label }) => {
                 const submitted = QUARTERS.map((q) =>
-                  quarterlyUpdates.some((u) => u.focusArea === label && u.quarter === q)
+                  quarterlyUpdates.some((u) => {
+                    if (u.focusArea !== label || u.quarter !== q) return false;
+                    const p = u.payload || {};
+                    if (p.primaryOnly) return false;
+                    const wins = String(p.wins || '').trim();
+                    return wins && wins.toLowerCase() !== 'none noted';
+                  })
                 );
                 return (
                   <div key={label} className="flex items-center justify-between gap-2">
