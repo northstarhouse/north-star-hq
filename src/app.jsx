@@ -5157,13 +5157,13 @@ const DashboardView = ({
           <div className="col-span-2 bg-white rounded-2xl border border-stone-100 card-shadow p-4 mt-1">
             <div className="text-xs uppercase tracking-wide text-steel font-semibold mb-3">Quarterly Updates</div>
             <div className="space-y-2">
-              {STRATEGIC_FOCUS_AREAS.map((area) => {
+              {SECTION_PAGES.map(({ label }) => {
                 const submitted = QUARTERS.map((q) =>
-                  quarterlyUpdates.some((u) => u.focusArea === area && u.quarter === q)
+                  quarterlyUpdates.some((u) => u.focusArea === label && u.quarter === q)
                 );
                 return (
-                  <div key={area} className="flex items-center justify-between gap-2">
-                    <div className="text-xs text-stone-700 truncate flex-1">{area}</div>
+                  <div key={label} className="flex items-center justify-between gap-2">
+                    <div className="text-xs text-stone-700 truncate flex-1">{label}</div>
                     <div className="flex items-center gap-2 flex-shrink-0">
                       {QUARTERS.map((q, idx) => (
                         <div key={q} className="flex items-center gap-0.5">
