@@ -19,6 +19,8 @@ const USE_SHEETS = true;
 const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbydaZEpixA_RWAQ42HPsrFe6gCrf5bDYhWbj7COlNwmq-tQOOJaBiivRQfahnGq3WIDeQ/exec';
 const MARKETING_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzcuMhZ1h15zP7IgYhyCBChgkx_mbe23G6756V2_lHNT1grfgKR-AuZxbHt3t806h8-/exec';
 const DRIVE_SCRIPT_URL = GOOGLE_SCRIPT_URL;
+const STRATEGIC_PLAN_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwceVcGLuTCKp_GjlzYERa1OyhUcQQw6jnKhG2cmn4_AgSZjPEE8CWaO698S-lEtlk1/exec';
+const STRATEGIC_PLAN_UPDATES_CACHE_KEY = 'nsh-strategic-plan-quarterly-cache-v1';
 const HONEYBOOK_MESSAGES_URL = 'https://docs.google.com/spreadsheets/d/1l-FsSLYELMM5pMwWS92UgKlwPmsrCmNEe7kmrEaQB6M/edit?gid=0#gid=0';
 const HONEYBOOK_MESSAGES_EMBED_URL = 'https://docs.google.com/spreadsheets/d/1l-FsSLYELMM5pMwWS92UgKlwPmsrCmNEe7kmrEaQB6M/preview';
 const ACCOUNTING_URL = 'https://docs.google.com/spreadsheets/d/1VcV4DksZpcZX6SxTteYJDvbaOB2qSBDDzDALiynWdgM/edit?usp=sharing';
@@ -167,6 +169,18 @@ const SheetsAPI = {
       return data.updates || [];
     } catch (error) {
       console.error('Error fetching quarterly updates:', error);
+      return [];
+    }
+  },
+
+  fetchStrategicPlanUpdates: async () => {
+    try {
+      const response = await fetch(`${STRATEGIC_PLAN_SCRIPT_URL}?action=getQuarterlyUpdates`);
+      if (!response.ok) throw new Error('Failed to fetch strategic plan updates');
+      const data = await response.json();
+      return data.updates || [];
+    } catch (error) {
+      console.error('Error fetching strategic plan updates:', error);
       return [];
     }
   },
@@ -1597,6 +1611,309 @@ const ReviewEditor = ({ areaLabel, quarter, review, onSave }) => {
         >
           {isSaving ? 'Saving...' : 'Save review'}
         </button>
+      </div>
+    </div>
+  );
+};
+
+// ============================================================================
+// QUARTERLY UPDATES TRACKER VIEW
+// ============================================================================
+
+const STRATEGIC_FOCUS_AREAS = [
+  'Fund Development',
+  'House and Grounds Development',
+  'Programs and Events',
+  'Organizational Development'
+];
+
+const QUARTERS = ['Q1', 'Q2', 'Q3', 'Q4'];
+
+const QUARTER_RANGES = {
+  Q1: 'Jan–Mar',
+  Q2: 'Apr–Jun',
+  Q3: 'Jul–Sep',
+  Q4: 'Oct–Dec'
+};
+
+const QUARTER_DUE = {
+  Q1: 'Due Mar 30',
+  Q2: 'Due Jun 30',
+  Q3: 'Due Sep 30',
+  Q4: 'Due Dec 31'
+};
+
+const QuarterlyUpdatesTrackerView = ({ updates, isLoading, onBack, onRefresh }) => {
+  const [expanded, setExpanded] = useState(null);
+  const [filterArea, setFilterArea] = useState('');
+  const [filterQuarter, setFilterQuarter] = useState('');
+
+  const getLatest = (area, quarter) => {
+    const matches = updates
+      .filter((u) => u.focusArea === area && u.quarter === quarter)
+      .sort((a, b) => new Date(b.submittedDate || b.createdAt || 0) - new Date(a.submittedDate || a.createdAt || 0));
+    return matches[0] || null;
+  };
+
+  const submittedCount = STRATEGIC_FOCUS_AREAS.reduce((total, area) => {
+    return total + QUARTERS.filter((q) => getLatest(area, q)).length;
+  }, 0);
+
+  const totalSlots = STRATEGIC_FOCUS_AREAS.length * QUARTERS.length;
+
+  const recentSubmissions = [...updates]
+    .filter((u) => STRATEGIC_FOCUS_AREAS.includes(u.focusArea))
+    .filter((u) => !filterArea || u.focusArea === filterArea)
+    .filter((u) => !filterQuarter || u.quarter === filterQuarter)
+    .sort((a, b) => new Date(b.submittedDate || b.createdAt || 0) - new Date(a.submittedDate || a.createdAt || 0));
+
+  const toggleExpand = (key) => setExpanded((prev) => (prev === key ? null : key));
+
+  const renderStatusDot = (area, quarter) => {
+    const item = getLatest(area, quarter);
+    if (!item) {
+      return (
+        <div className="flex flex-col items-center gap-1">
+          <div className="w-3 h-3 rounded-full bg-stone-200" title="No submission" />
+          <div className="text-xs text-steel hidden sm:block">{QUARTER_DUE[quarter]}</div>
+        </div>
+      );
+    }
+    const date = item.submittedDate || item.createdAt || '';
+    return (
+      <div className="flex flex-col items-center gap-1">
+        <div className="w-3 h-3 rounded-full bg-green-400" title={`Submitted ${date}`} />
+        <div className="text-xs text-steel hidden sm:block">{date ? formatDateNumeric(date) : '—'}</div>
+      </div>
+    );
+  };
+
+  const renderDetail = (item) => {
+    if (!item) return null;
+    const p = item.payload || {};
+    const challenges = p.challenges || {};
+    const supportTypes = p.supportTypes || {};
+    const challengeLabels = {
+      capacity: 'Capacity/volunteer limitations',
+      budget: 'Budget/funding constraints',
+      scheduling: 'Scheduling/timing issues',
+      coordination: 'Cross-area coordination',
+      external: 'External factors',
+      other: challenges.otherText ? `Other: ${challenges.otherText}` : 'Other'
+    };
+    const supportLabels = {
+      staff: 'Staff or volunteer help',
+      marketing: 'Marketing or communications',
+      board: 'Board guidance or decision',
+      funding: 'Funding or fundraising',
+      facilities: 'Facilities or logistics',
+      other: supportTypes.otherText ? `Other: ${supportTypes.otherText}` : 'Other'
+    };
+    const checkedChallenges = Object.keys(challengeLabels).filter((k) => challenges[k]);
+    const checkedSupport = Object.keys(supportLabels).filter((k) => supportTypes[k]);
+
+    const Field = ({ label, value }) => {
+      if (!value || String(value).toLowerCase() === 'none noted') return null;
+      return (
+        <div>
+          <div className="text-xs uppercase tracking-wide text-steel font-semibold mb-1">{label}</div>
+          <div className="text-sm text-stone-700 whitespace-pre-line">{value}</div>
+        </div>
+      );
+    };
+
+    return (
+      <div className="mt-4 space-y-3 border-t border-stone-100 pt-4">
+        {p.primaryFocus && (
+          <div>
+            <div className="text-xs uppercase tracking-wide text-steel font-semibold mb-1">Primary focus</div>
+            <div className="text-sm text-stone-700 whitespace-pre-line">{p.primaryFocus}</div>
+          </div>
+        )}
+        {p.goals && p.goals.some((g) => g.goal) && (
+          <div>
+            <div className="text-xs uppercase tracking-wide text-steel font-semibold mb-1">Goals</div>
+            <div className="space-y-1">
+              {p.goals.filter((g) => g.goal).map((g, idx) => (
+                <div key={idx} className="flex items-start gap-2 text-sm text-stone-700">
+                  <span className="text-gold mt-0.5"><IconStar size={11} /></span>
+                  <span>{g.goal}{g.status ? <span className="ml-2 text-xs text-steel">({g.status})</span> : null}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+        <Field label="What went well" value={p.wins} />
+        {challenges.details && <Field label="Challenges" value={challenges.details} />}
+        {checkedChallenges.length > 0 && (
+          <div>
+            <div className="text-xs uppercase tracking-wide text-steel font-semibold mb-1">Challenges (checked)</div>
+            <div className="text-sm text-stone-700">{checkedChallenges.map((k) => challengeLabels[k]).join(', ')}</div>
+          </div>
+        )}
+        <Field label="Support needed" value={p.supportNeeded} />
+        {checkedSupport.length > 0 && (
+          <div>
+            <div className="text-xs uppercase tracking-wide text-steel font-semibold mb-1">Support types</div>
+            <div className="text-sm text-stone-700">{checkedSupport.map((k) => supportLabels[k]).join(', ')}</div>
+          </div>
+        )}
+        <Field label="Decisions needed" value={p.decisionsNeeded} />
+        <Field label="Next quarter focus" value={p.nextQuarterFocus} />
+        {p.nextPriorities && p.nextPriorities.some((x) => x) && (
+          <div>
+            <div className="text-xs uppercase tracking-wide text-steel font-semibold mb-1">Next quarter priorities</div>
+            <div className="space-y-1">
+              {p.nextPriorities.filter((x) => x).map((x, idx) => (
+                <div key={idx} className="flex items-start gap-2 text-sm text-stone-700">
+                  <span className="text-gold mt-0.5"><IconStar size={11} /></span>
+                  <span>{x}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
+    );
+  };
+
+  return (
+    <div className="max-w-5xl mx-auto fade-up">
+      <div className="flex items-center justify-between mb-6 gap-3">
+        <div className="flex items-center gap-3">
+          <button
+            onClick={onBack}
+            className="w-8 h-8 flex items-center justify-center rounded-lg border border-stone-200 bg-white text-stone-500 hover:bg-stone-50"
+          >
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M9 2L4 7l5 5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+          </button>
+          <div>
+            <h2 className="font-display text-2xl text-ink">Quarterly Updates Tracker</h2>
+            <div className="text-sm text-steel mt-0.5">Updates submitted via the Strategic Plan app</div>
+          </div>
+        </div>
+        <button
+          onClick={onRefresh}
+          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-stone-200 bg-white text-xs text-stone-600 hover:bg-stone-50"
+        >
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M1 4v6h6M23 20v-6h-6"/><path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 0 1 3.51 15" strokeLinecap="round" strokeLinejoin="round"/></svg>
+          Refresh
+        </button>
+      </div>
+
+      {/* Summary stats */}
+      <div className="grid grid-cols-3 gap-4 mb-6">
+        <div className="bg-white rounded-2xl border border-stone-100 p-4 card-shadow text-center">
+          <div className="text-2xl font-display text-ink">{submittedCount}</div>
+          <div className="text-xs uppercase tracking-wide text-steel mt-1">Submitted</div>
+        </div>
+        <div className="bg-white rounded-2xl border border-stone-100 p-4 card-shadow text-center">
+          <div className="text-2xl font-display text-ink">{totalSlots - submittedCount}</div>
+          <div className="text-xs uppercase tracking-wide text-steel mt-1">Pending</div>
+        </div>
+        <div className="bg-white rounded-2xl border border-stone-100 p-4 card-shadow text-center">
+          <div className="text-2xl font-display text-ink">{Math.round((submittedCount / totalSlots) * 100)}%</div>
+          <div className="text-xs uppercase tracking-wide text-steel mt-1">Complete</div>
+        </div>
+      </div>
+
+      {/* Tracker grid */}
+      <div className="bg-white rounded-3xl border border-stone-100 p-6 card-shadow mb-6">
+        <div className="text-sm font-semibold text-ink mb-4">Submission Status</div>
+        {isLoading ? (
+          <div className="text-sm text-steel py-4 text-center">Loading...</div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr>
+                  <th className="text-left text-xs uppercase tracking-wide text-steel font-semibold pb-3 pr-4 min-w-[160px]">Focus Area</th>
+                  {QUARTERS.map((q) => (
+                    <th key={q} className="text-center text-xs uppercase tracking-wide text-steel font-semibold pb-3 px-3 min-w-[80px]">
+                      <div>{q}</div>
+                      <div className="text-stone-400 normal-case font-normal">{QUARTER_RANGES[q]}</div>
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {STRATEGIC_FOCUS_AREAS.map((area) => (
+                  <tr key={area} className="border-t border-stone-50">
+                    <td className="py-3 pr-4 text-stone-700 font-medium">{area}</td>
+                    {QUARTERS.map((q) => (
+                      <td key={q} className="py-3 px-3 text-center">{renderStatusDot(area, q)}</td>
+                    ))}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+
+      {/* Filters */}
+      <div className="flex flex-wrap items-center gap-3 mb-4">
+        <div className="text-sm font-semibold text-ink">All Submissions</div>
+        <select
+          value={filterArea}
+          onChange={(e) => setFilterArea(e.target.value)}
+          className="text-xs border border-stone-200 rounded-lg px-2 py-1.5 bg-white text-stone-600"
+        >
+          <option value="">All areas</option>
+          {STRATEGIC_FOCUS_AREAS.map((a) => <option key={a} value={a}>{a}</option>)}
+        </select>
+        <select
+          value={filterQuarter}
+          onChange={(e) => setFilterQuarter(e.target.value)}
+          className="text-xs border border-stone-200 rounded-lg px-2 py-1.5 bg-white text-stone-600"
+        >
+          <option value="">All quarters</option>
+          {QUARTERS.map((q) => <option key={q} value={q}>{q}</option>)}
+        </select>
+      </div>
+
+      {/* Submissions list */}
+      <div className="space-y-3">
+        {isLoading ? (
+          <div className="bg-white rounded-2xl border border-stone-100 p-6 text-center text-sm text-steel">Loading submissions...</div>
+        ) : recentSubmissions.length === 0 ? (
+          <div className="bg-white rounded-2xl border border-stone-100 p-6 text-center text-sm text-steel">No submissions yet.</div>
+        ) : (
+          recentSubmissions.map((item, idx) => {
+            const key = `${item.focusArea}-${item.quarter}-${idx}`;
+            const date = item.submittedDate || item.createdAt || '';
+            const p = item.payload || {};
+            const isOpen = expanded === key;
+            return (
+              <div key={key} className="bg-white rounded-2xl border border-stone-100 card-shadow">
+                <button
+                  type="button"
+                  onClick={() => toggleExpand(key)}
+                  className="w-full text-left px-5 py-4 flex items-center justify-between gap-3"
+                >
+                  <div className="flex items-center gap-3 min-w-0">
+                    <div className="w-2 h-2 rounded-full bg-green-400 flex-shrink-0" />
+                    <div className="min-w-0">
+                      <div className="font-medium text-ink text-sm truncate">{item.focusArea}</div>
+                      <div className="text-xs text-steel mt-0.5">{item.quarter} · {date ? formatDateNumeric(date) : '—'}{p.primaryFocus ? ` · ${String(p.primaryFocus).slice(0, 60)}${p.primaryFocus.length > 60 ? '…' : ''}` : ''}</div>
+                    </div>
+                  </div>
+                  <svg
+                    width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.5"
+                    className={`flex-shrink-0 text-steel transition-transform ${isOpen ? 'rotate-180' : ''}`}
+                  >
+                    <path d="M2 5l5 5 5-5" strokeLinecap="round" strokeLinejoin="round"/>
+                  </svg>
+                </button>
+                {isOpen && (
+                  <div className="px-5 pb-5">
+                    {renderDetail(item)}
+                  </div>
+                )}
+              </div>
+            );
+          })
+        )}
       </div>
     </div>
   );
@@ -4495,7 +4812,8 @@ const DashboardView = ({
   onOpenVoicemails,
   onOpenAccounting,
   unreadHoneybook,
-  unreadVoicemails
+  unreadVoicemails,
+  quarterlyUpdates = []
 }) => {
   const [newTodoText, setNewTodoText] = useState('');
   const [showCompleted, setShowCompleted] = useState(false);
@@ -4834,6 +5152,35 @@ const DashboardView = ({
               ))}
             </div>
           </div>
+
+          {/* Quarterly Updates Tracker */}
+          <div className="col-span-2 bg-white rounded-2xl border border-stone-100 card-shadow p-4 mt-1">
+            <div className="text-xs uppercase tracking-wide text-steel font-semibold mb-3">Quarterly Updates</div>
+            <div className="space-y-2">
+              {STRATEGIC_FOCUS_AREAS.map((area) => {
+                const submitted = QUARTERS.map((q) =>
+                  quarterlyUpdates.some((u) => u.focusArea === area && u.quarter === q)
+                );
+                return (
+                  <div key={area} className="flex items-center justify-between gap-2">
+                    <div className="text-xs text-stone-700 truncate flex-1">{area}</div>
+                    <div className="flex items-center gap-2 flex-shrink-0">
+                      {QUARTERS.map((q, idx) => (
+                        <div key={q} className="flex items-center gap-0.5">
+                          <span className="text-[10px] text-steel">{q}</span>
+                          {submitted[idx] ? (
+                            <svg width="12" height="12" viewBox="0 0 12 12" fill="none" className="text-green-500"><circle cx="6" cy="6" r="5.5" stroke="currentColor" strokeWidth="1"/><path d="M3.5 6l1.8 1.8 3.2-3.6" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                          ) : (
+                            <svg width="12" height="12" viewBox="0 0 12 12" fill="none" className="text-stone-300"><circle cx="6" cy="6" r="5.5" stroke="currentColor" strokeWidth="1"/></svg>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -5085,6 +5432,8 @@ const StrategyApp = () => {
   };
   const [quarterlyUpdates, setQuarterlyUpdates] = useState([]);
   const [quarterlyDraft, setQuarterlyDraft] = useState(null);
+  const [strategicPlanUpdates, setStrategicPlanUpdates] = useState([]);
+  const [isLoadingStrategicUpdates, setIsLoadingStrategicUpdates] = useState(false);
   const [inlineQuarterEdit, setInlineQuarterEdit] = useState(null);
   const [inlineQuarterForm, setInlineQuarterForm] = useState(null);
   const [isSavingInlineQuarter, setIsSavingInlineQuarter] = useState(false);
@@ -5400,6 +5749,20 @@ const StrategyApp = () => {
     setView('dashboard');
   };
 
+  const loadStrategicPlanUpdates = async () => {
+    setIsLoadingStrategicUpdates(true);
+    try {
+      const cached = readSimpleCache(STRATEGIC_PLAN_UPDATES_CACHE_KEY);
+      if (cached) setStrategicPlanUpdates(cached);
+      const fresh = await SheetsAPI.fetchStrategicPlanUpdates();
+      setStrategicPlanUpdates(fresh);
+      writeSimpleCache(STRATEGIC_PLAN_UPDATES_CACHE_KEY, fresh);
+    } catch (error) {
+      console.error('Failed to load strategic plan updates:', error);
+    }
+    setIsLoadingStrategicUpdates(false);
+  };
+
   return (
     <div className="min-h-screen">
       <header className="sticky top-0 z-40 bg-white/90 backdrop-blur border-b border-stone-100">
@@ -5427,11 +5790,16 @@ const StrategyApp = () => {
                 <div className="absolute right-0 top-11 z-50 w-44 bg-white border border-stone-200 rounded-lg shadow-lg py-1 text-sm" onMouseLeave={() => setShowNavMenu(false)}>
                   {[
                     { key: 'dashboard', label: '2026 Snapshot' },
+                    { key: 'quarterly-tracker', label: 'Quarterly Updates' },
                     { key: 'marketing', label: 'Marketing' },
                   ].map(({ key, label }) => (
                     <button
                       key={key}
-                      onClick={() => { setView(key); setShowNavMenu(false); }}
+                      onClick={() => {
+                        setView(key);
+                        setShowNavMenu(false);
+                        if (key === 'quarterly-tracker') loadStrategicPlanUpdates();
+                      }}
                       className={`w-full text-left px-4 py-2 hover:bg-stone-50 transition-colors ${view === key ? 'text-amber-700 font-medium' : 'text-stone-700'}`}
                     >
                       {label}
@@ -5484,6 +5852,15 @@ const StrategyApp = () => {
                 }}
                 unreadHoneybook={sheetUnread.honeybook}
                 unreadVoicemails={sheetUnread.voicemails}
+                quarterlyUpdates={quarterlyUpdates}
+              />
+            )}
+            {view === 'quarterly-tracker' && (
+              <QuarterlyUpdatesTrackerView
+                updates={strategicPlanUpdates}
+                isLoading={isLoadingStrategicUpdates}
+                onBack={() => setView('dashboard')}
+                onRefresh={loadStrategicPlanUpdates}
               />
             )}
             {view === 'marketing' && (
